@@ -24,14 +24,14 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 		if (uplink_flag & UPLINK_NUKE_OPS) 					// uplink code kind of needs a redesign
 			nuclear_team = locate() in GLOB.antagonist_teams	// the team discounts could be a in a GLOB with this design but it would make sense for them to be team specific...
 		if (!nuclear_team)
-			create_uplink_sales(3, "Discounted Gear", 1, sale_items, filtered_uplink_items)
+			create_uplink_sales(3, "割引対象商品", 1, sale_items, filtered_uplink_items)
 		else
 			if (!nuclear_team.team_discounts)
 				// create 5 unlimited stock discounts
-				create_uplink_sales(5, "Discounted Team Gear", -1, sale_items, filtered_uplink_items)
+				create_uplink_sales(5, "チーム割引商品", -1, sale_items, filtered_uplink_items)
 				// Create 10 limited stock discounts
-				create_uplink_sales(10, "Limited Stock Team Gear", 1, sale_items, filtered_uplink_items)
-				nuclear_team.team_discounts = list("Discounted Team Gear" = filtered_uplink_items["Discounted Team Gear"], "Limited Stock Team Gear" = filtered_uplink_items["Limited Stock Team Gear"])
+				create_uplink_sales(10, "数量限定のチームアイテム", 1, sale_items, filtered_uplink_items)
+				nuclear_team.team_discounts = list("チーム割引商品" = filtered_uplink_items["チーム割引商品"], "数量限定のチームアイテム" = filtered_uplink_items["数量限定のチームアイテム"])
 			else
 				for(var/cat in nuclear_team.team_discounts)
 					for(var/item in nuclear_team.team_discounts[cat])
@@ -39,8 +39,8 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 						var/datum/uplink_item/O = filtered_uplink_items[initial(D.category)][initial(D.name)]
 						O.refundable = FALSE
 
-				filtered_uplink_items["Discounted Team Gear"] = nuclear_team.team_discounts["Discounted Team Gear"]
-				filtered_uplink_items["Limited Stock Team Gear"] = nuclear_team.team_discounts["Limited Stock Team Gear"]
+				filtered_uplink_items["チーム割引商品"] = nuclear_team.team_discounts["チーム割引商品"]
+				filtered_uplink_items["数量限定のチームアイテム"] = nuclear_team.team_discounts["数量限定のチームアイテム"]
 
 
 	return filtered_uplink_items
@@ -55,7 +55,7 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	for (var/i in 1 to num)
 		var/datum/uplink_item/I = pick_n_take(sale_items)
 		var/datum/uplink_item/A = new I.type
-		var/list/disclaimer = list("Void where prohibited.", "Not recommended for children.", "Contains small parts.", "Check local laws for legality in region.", "Do not taunt.", "Not responsible for direct, indirect, incidental or consequential damages resulting from any defect, error or failure to perform.", "Keep away from fire or flames.", "Product is provided \"as is\" without any implied or expressed warranties.", "As seen on TV.", "For recreational use only.", "Use only as directed.", "16% sales tax will be charged for orders originating within Space Nebraska.")
+		var/list/disclaimer = list("お子様にはお勧めできません。", "小さな部品が含まれています。", "地域の合法性については、現地の法律を確認してください。", "嘲笑してはいけない。", "本製品の欠陥、エラー、不具合に起因する直接的、間接的、偶発的、結果的な損害については責任を負いかねます。", "火や炎に近づけないでください。", "本製品は、いかなる黙示または明示の保証もなく、\"as is\"で提供されます。", "テレビで見たとおり。", "レクリエーション用としてのみ使用できます。", "指示された方法でのみ使用してください。", "スペースネブラスカ州内で発生した注文には、16％の消費税が課されます。")
 		A.limited_stock = limited_stock
 		A.category = category_name
 		I.refundable = FALSE //THIS MAN USES ONE WEIRD TRICK TO GAIN FREE TC, CODERS HATES HIM!
@@ -66,9 +66,9 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 					//Bulk discount
 					var/count = rand(3,7)
 					var/discount = A.get_discount()
-					A.name += " (Bulk discount - [count] for [((1-discount)*100)]% off!)"
+					A.name += " (まとめ買い割引: - 購入する [count] を [((1-discount)*100)]%で購入する!)"
 					A.cost = max(round(A.cost*count*discount), 1)
-					A.desc += " Normally costs [initial(A.cost)*count] TC. All sales final. [pick(disclaimer)]"
+					A.desc += " 通常コスト: [initial(A.cost)*count] TC. [pick(disclaimer)]"
 					A.spawn_amount = count
 				else
 					//X% off!
@@ -77,11 +77,11 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 						discount *= 0.5
 					A.cost = max(round(A.cost * discount), 1)
 					A.name += " ([round(((initial(A.cost)-A.cost)/initial(A.cost))*100)]% off!)"
-					A.desc += " Normally costs [initial(A.cost)] TC. All sales final. [pick(disclaimer)]"
+					A.desc += " 通常コスト: [initial(A.cost)] TC. [pick(disclaimer)]"
 			if(4)
 				//Buy 1 get 1 free!
-				A.name += " (Buy 1 get 1 free!)"
-				A.desc += " Obtain 2 for the price of 1. All sales final. [pick(disclaimer)]"
+				A.name += " (1個買うと1個無料!)"
+				A.desc += " 1の価格で2が手に入る。[pick(disclaimer)]"
 				A.spawn_amount = 2
 			if(5)
 				//Get 2 items with their combined price reduced.
@@ -91,8 +91,8 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 				var/final_cost = max(round(total_cost * discount), 1)
 				//Setup the item
 				A.cost = final_cost
-				A.name += " + [second_I.name] (Discounted Bundle - [100-(round((final_cost / total_cost)*100))]% off!)"
-				A.desc += " Also contains [second_I.name]. Normally costs [total_cost] TC when bought together. All sales final. [pick(disclaimer)]"
+				A.name += " + [second_I.name] (バンドル割引 - [100-(round((final_cost / total_cost)*100))]%で購入する!)"
+				A.desc += " も収録されています - [second_I.name]. 通常、一緒に購入すると [total_cost] TCになる. [pick(disclaimer)]"
 				A.bonus_items = list(second_I.item)
 		A.discounted = TRUE
 		A.item = I.item
@@ -159,109 +159,105 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 		if(ishuman(user))
 			var/mob/living/carbon/human/H = user
 			if(H.put_in_hands(A))
-				to_chat(H, "[A] materializes into your hands!")
+				to_chat(H, "[A] があなたの手に実体化!")
 				return A
-	to_chat(user, "[A] materializes onto the floor.")
+	to_chat(user, "[A] が床に現れる。")
 	return A
 
 //Discounts (dynamically filled above)
 /datum/uplink_item/discounts
-	category = "Discounts"
+	category = "割引情報"
 
 //All bundles and telecrystals
 /datum/uplink_item/bundles_TC
-	category = "Bundles"
+	category = "バンドル"
 	surplus = 0
 	cant_discount = TRUE
 
 /datum/uplink_item/bundles_TC/chemical
-	name = "Bioterror bundle"
-	desc = "For the madman: Contains a handheld Bioterror chem sprayer, a Bioterror foam grenade, a box of lethal chemicals, a dart pistol, \
-			box of syringes, Donksoft assault rifle, and some riot darts. Remember: Seal suit and equip internals before use."
+	name = "バイオテロバンドル"
+	desc = "狂人用 バイオテロ化学噴霧器、バイオテロ発泡手榴弾、致死性化学物質の箱、ダーツピストル、注射器、ドンクソフトアサルトライフル、 \
+			暴動用ダーツが含まれている。注射器の箱、ドンクソフト・アサルトライフル、ライオットダーツがある。忘れないで 使用前にスーツと装備の内部を 密閉すること"
 	item = /obj/item/storage/backpack/duffelbag/syndie/med/bioterrorbundle
 	cost = 30 // normally 42
 	purchasable_from = UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS
 
 /datum/uplink_item/bundles_TC/bulldog
-	name = "Bulldog bundle"
-	desc = "Lean and mean: Optimized for people that want to get up close and personal. Contains the popular \
-			Bulldog shotgun, two 12g buckshot drums, and a pair of Thermal imaging goggles."
+	name = "ブルドッグバンドル"
+	desc = "無駄をそぎ落とし 間近で見たい人に最適です。人気のブルドッグショットガン、 \
+			12gバックショットドラム2本、サーマルイメージングゴーグル1個を同梱。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/bulldogbundle
 	cost = 13 // normally 16
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/bundles_TC/c20r
-	name = "C-20r bundle"
-	desc = "Old Faithful: The classic C-20r, bundled with two magazines and a (surplus) suppressor at discount price."
+	name = "C-20rバンドル"
+	desc = "信頼のおける友人。定番のC-20rにマガジン2本とサプレッサー（余剰品）をバンドルし、格安で販売します。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/c20rbundle
 	cost = 14 // normally 16
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/bundles_TC/cyber_implants
-	name = "Cybernetic Implants Bundle"
-	desc = "A random selection of cybernetic implants. Guaranteed 5 high quality implants. Comes with an autosurgeon."
+	name = "サイバネティック・インプラント・バンドル"
+	desc = "サイバネティックインプラントがランダムで入っています。高品質なインプラント5個を保証。オートサージェリー付き。"
 	item = /obj/item/storage/box/cyber_implants
 	cost = 40
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/bundles_TC/medical
-	name = "Medical bundle"
-	desc = "The support specialist: Aid your fellow operatives with this medical bundle. Contains a tactical medkit, \
-			a Donksoft LMG, a box of riot darts and a pair of magboots to rescue your friends in no-gravity environments."
+	name = "医療用バンドル"
+	desc = "サポートのスペシャリスト。このメディカルバンドルで仲間を助けよう。タクティカル・メディカルキット、 \
+			ドンクソフトLMG、ライオットダーツ、マグブーツが含まれ、無重力の環境下で仲間を救出することができます。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/med/medicalbundle
 	cost = 15 // normally 20
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/bundles_TC/sniper
-	name = "Sniper bundle"
-	desc = "Elegant and refined: Contains a collapsed sniper rifle in an expensive carrying case, \
-			two soporific knockout magazines, a free surplus suppressor, and a sharp-looking tactical turtleneck suit. \
-			We'll throw in a free red tie if you order NOW."
+	name = "スナイパーバンドル"
+	desc = "エレガントで洗練されたデザイン。高価なキャリングケースに入った伸縮式スナイパーライフル、 \
+			強力なノックアウトマガジン2本、サプレッサー（無料）、そしてシャープなタートルネックスーツがセットになっています。"
 	item = /obj/item/storage/briefcase/sniperbundle
 	cost = 20 // normally 26
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/bundles_TC/firestarter
-	name = "Spetsnaz Pyro bundle"
-	desc = "For systematic suppression of carbon lifeforms in close quarters: Contains a lethal New Russian backpack spray, Elite hardsuit, \
-			Stechkin APS pistol, two magazines, a minibomb and a stimulant syringe. \
-			Order NOW and comrade Boris will throw in an extra tracksuit."
+	name = "スペツナズパイロバンドル"
+	desc = "近接戦での炭素系生命体の 制圧を目的とする ニューロシアン・バックパックスプレー、エリート・ハードスーツ、ステフキン・ＡＰＳピストル、 \
+			マガジン2本、ミニ爆弾、覚醒剤注射器が含まれています。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/firestarter
 	cost = 30
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/bundles_TC/contract_kit
-	name = "Contract Kit"
-	desc = "The Syndicate have offered you the chance to become a contractor, take on kidnapping contracts for TC and cash payouts. Upon purchase, \
-			you'll be granted your own contract uplink embedded within the supplied tablet computer. Additionally, you'll be granted \
-			standard contractor gear to help with your mission - comes supplied with the tablet, specialised space suit, chameleon jumpsuit and mask, \
-			agent card, specialised contractor baton, and three randomly selected low cost items. Can include otherwise unobtainable items."
+	name = "コントラクトキット"
+	desc = "シンジケートから請負人として誘拐を請け負い、TCと現金を手に入れるチャンスがある。購入すると、 \
+			付属のタブレットPCにあなた専用の契約アップリンクが組み込まれます。タブレット、特殊な宇宙服、カメレオンジャンプスーツとマスク、 \
+			エージェントカード、特殊な契約者バトン、そしてランダムで3つの低コストアイテムが付属します。入手不可能なアイテムが含まれることもあります。"
 	item = /obj/item/storage/box/syndie_kit/contract_kit
 	cost = 20
 	player_minimum = 15
 	purchasable_from = ~(UPLINK_INCURSION | UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/bundles_TC/bundle_A
-	name = "Syndi-kit Tactical"
-	desc = "Syndicate Bundles, also known as Syndi-Kits, are specialized groups of items that arrive in a plain box. \
-			These items are collectively worth more than 20 telecrystals, but you do not know which specialization \
-			you will receive. May contain discontinued and/or exotic items."
+	name = "シンジキット・タクティカル"
+	desc = "シンジケートバンドルは、シンジキットと呼ばれ、無地の箱に入った専門的な商品群のことです。 \
+			これらのアイテムは合計で20テレクリスタル以上の価値がありますが、 \
+			どの特化したものを受け取れるかはわかりません。生産中止のアイテムやエキゾチックなアイテムが入っている場合があります。"
 	item = /obj/item/storage/box/syndie_kit/bundle_A
 	cost = 20
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/bundles_TC/bundle_B
-	name = "Syndi-kit Special"
-	desc = "Syndicate Bundles, also known as Syndi-Kits, are specialized groups of items that arrive in a plain box. \
-			In Syndi-kit Special, you will receive items used by famous syndicate agents of the past. Collectively worth more than 20 telecrystals, the syndicate loves a good throwback."
+	name = "シンディキット・スペシャル"
+	desc = "シンジケートバンドルは、シンジキットと呼ばれ、無地の箱に入った専門的な商品群のことです。 \
+			シンジキットスペシャルでは、過去の有名なシンジケートエージェントが使用したアイテムがもらえます。20個以上のテレクリスタルの価値があり、シンジケートは古き良き時代を懐かしんでいる。"
 	item = /obj/item/storage/box/syndie_kit/bundle_B
 	cost = 20
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/bundles_TC/surplus
-	name = "Syndicate Surplus Crate"
-	desc = "A dusty crate from the back of the Syndicate warehouse. Rumored to contain a valuable assortment of items, \
-			but you never know. Contents are sorted to always be worth 50 TC."
+	name = "シンジケートサープラスクレート"
+	desc = "シンジケートの倉庫の奥にあった埃まみれの木箱。貴重なアイテムが入っているという噂だが、果たしてどうだろう。中身は常に50TCの価値があるように仕分けされている。"
 	item = /obj/structure/closet/crate
 	cost = 20
 	player_minimum = 20
@@ -270,9 +266,9 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	var/uplink_contents = UPLINK_TRAITORS
 
 /datum/uplink_item/bundles_TC/surplus/super
-	name = "Super Surplus Crate"
-	desc = "A dusty SUPER-SIZED from the back of the Syndicate warehouse. Rumored to contain a valuable assortment of items, \
-			but you never know. Contents are sorted to always be worth 125 TC."
+	name = "スーパーサープラス・クレート"
+	desc = "シンジケートの倉庫の奥にあった埃まみれの超大型。貴重なアイテムが入っているとの噂だが、果たしてどうだろう。 \
+			中身は常に125TCの価値があるように仕分けされている。"
 	cost = 40
 	player_minimum = 30
 	starting_crate_value = 125
@@ -302,11 +298,10 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 //Will either give you complete crap or overpowered as fuck gear
 /datum/uplink_item/bundles_TC/surplus/random
-	name = "Syndicate Lootbox"
-	desc = "A dusty crate from the back of the Syndicate warehouse. Rumored to contain a valuable assortment of items, \
-			With their all new kit, codenamed 'scam' the syndicate attempted to extract the energy of the die of fate to \
-			make a loot-box style system but failed, so instead just fake their randomness using a corgi to sniff out the items to shove in it.\
-			Item price not guaranteed. Can contain normally unobtainable items."
+	name = "シンジケートのLootbox"
+	desc = "シンジケートの倉庫の奥にあった埃まみれの木箱。貴重な品々が入っていると噂されている, \
+			新商品はすべて「詐欺」のレッテルを貼られた。lootbox的なシステムを作ろうとして失敗した。 \
+			アイテム価格が保証されていない。通常では入手不可能なアイテムが含まれている可能性がある。"
 	purchasable_from = ~(UPLINK_INCURSION | UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 	uplink_contents = (UPLINK_TRAITORS | UPLINK_NUKE_OPS)
 	player_minimum = 30
@@ -315,8 +310,8 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	var/index = rand(1, 20)
 	starting_crate_value = index * 5
 	if(index == 1)
-		to_chat(user, "<span class='warning'><b>Incomming transmission from the syndicate.</b></span>")
-		to_chat(user, "<span class='warning'>You feel an overwhelming sense of pride and accomplishment.</span>")
+		to_chat(user, "<span class='warning'><b>シンジケートからの着信。</b></span>")
+		to_chat(user, "<span class='warning'>圧倒的なプライドと達成感を感じる。</span>")
 		var/obj/item/clothing/mask/joy/funny_mask = new(get_turf(user))
 		ADD_TRAIT(funny_mask, TRAIT_NODROP, CURSED_ITEM_TRAIT)
 		var/obj/item/I = user.get_item_by_slot(ITEM_SLOT_MASK)
@@ -325,16 +320,16 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 		user.equip_to_slot_if_possible(funny_mask, ITEM_SLOT_MASK)
 	else if(index == 20)
 		starting_crate_value = 200
-		print_command_report("Congratulations to [user] for being the [rand(4, 9)]th lucky winner of the syndicate lottery! \
-		Dread Admiral Sabertooth has authorised the beaming of your special equipment immediately! Happy hunting operative.",
-		"Syndicate Gambling Division High Command", TRUE)
+		print_command_report("[user]さん、シンジケートのくじ引きで [rand(4, 9)] 番目に当選されたとのこと、おめでとうございます。 \
+		セイバートゥース提督はあなたの特別な装備の転送を許可しました。ハッピーハンティング オペレーター", "シンジケート賭博部門最高司令部",
+		"シンジケート・ギャンブル部門最高司令部", TRUE)
 	var/obj/item/implant/weapons_auth/W = new
 	W.implant(user)	//Gives them the ability to use restricted weapons
 	. = ..()
 
 /datum/uplink_item/bundles_TC/random
-	name = "Random Item"
-	desc = "Picking this will purchase a random item. Useful if you have some TC to spare or if you haven't decided on a strategy yet."
+	name = "ランダムアイテム"
+	desc = "これを選ぶと、ランダムでアイテムが購入できます。TCに余裕があるときや、まだ作戦を決めていないときに便利です。"
 	item = /obj/effect/gibspawner/generic // non-tangible item because techwebs use this path to determine illegal tech
 	cost = 0
 
@@ -358,8 +353,8 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 		U.MakePurchase(user, I)
 
 /datum/uplink_item/bundles_TC/telecrystal
-	name = "1 Raw Telecrystal"
-	desc = "A telecrystal in its rawest and purest form; can be utilized on active uplinks to increase their telecrystal count."
+	name = "生のテレクリスタル 1個"
+	desc = "純度の高いテレクリスタル1個。アクティブなアップリンクに使用すると、テレクリスタルの数が増加する。"
 	item = /obj/item/stack/telecrystal
 	cost = 1
 	// Don't add telecrystals to the purchase_log since
@@ -367,20 +362,20 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	purchase_log_vis = FALSE
 
 /datum/uplink_item/bundles_TC/telecrystal/five
-	name = "5 Raw Telecrystals"
-	desc = "Five telecrystals in their rawest and purest form; can be utilized on active uplinks to increase their telecrystal count."
+	name = "生のテレクリスタル 5個"
+	desc = "純度の高いテレクリスタル5個。アクティブなアップリンクに使用すると、テレクリスタルの数が増加する。"
 	item = /obj/item/stack/telecrystal/five
 	cost = 5
 
 /datum/uplink_item/bundles_TC/telecrystal/twenty
-	name = "20 Raw Telecrystals"
-	desc = "Twenty telecrystals in their rawest and purest form; can be utilized on active uplinks to increase their telecrystal count."
+	name = "生のテレクリスタル 20個"
+	desc = "純度の高いテレクリスタル20個。アクティブなアップリンクに使用すると、テレクリスタルの数が増加する。"
 	item = /obj/item/stack/telecrystal/twenty
 	cost = 20
 
 /datum/uplink_item/bundles_TC/crate
-	name = "Bulk Hardsuit Bundle"
-	desc = "A crate containing 4 valueable syndicate hardsuits."
+	name = "バルクハードスーツバンドル"
+	desc = "シンジケートの貴重なハードスーツが4つ入った木箱。"
 	cost = 18
 	purchasable_from = UPLINK_INCURSION
 	item = /obj/effect/gibspawner/generic
@@ -401,9 +396,9 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	return C
 
 /datum/uplink_item/bundles_TC/crate/medical
-	name = "Syndicate Medical Bundle"
-	desc = "Contains an assortment of syndicate medical equipment for you and your team.\
-			Comes with a variety of first-aid kits, pill bottles, a compact defibrillator and 4 stimpacks."
+	name = "シンジケート・メディカル・バンドル"
+	desc = "あなたとあなたのチームのためのシンジケートの医療機器のアソートが含まれています。\
+			各種救急キット、ピルボトル、小型除細動器、スティムパック4個が付属しています。"
 	cost = 12
 	contents = list(
 		/obj/item/storage/firstaid/tactical = 2,	//8 TC
@@ -417,10 +412,10 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	)
 
 /datum/uplink_item/bundles_TC/crate/shuttle
-	name = "Stolen Shuttle Creation Kit"
-	desc = "Every syndicate team needs their own shuttle. It's a shame you weren't supplied with one, but thats not a problem\
-			if you can spare some TC! The all new shuttle creation kit (produced by the syndicate) contains everything you need\
-			to get flying! All syndicate agents are advised to ignore the Nanotrasen labels on products. Space proof suits not included."
+	name = "盗難シャトル作成キット"
+	desc = "シンジケートのチームにはシャトルが必要だ 支給されなかったのは残念だが、TCに余裕があれば問題ないだろう。\
+			新しいシャトル作成キット（シンジケートが作成）には、飛行に必要なものがすべて含まれています。\
+			シンジケートのエージェントは製品のナノトラセンラベルを無視することをお勧めします。宇宙服は含まれません。"
 	cost = 15	//There are multiple uses for the RCD and plasma canister, but both are easilly accessible for items that cost less than all of their TC.
 	contents = list(
 		/obj/machinery/portable_atmospherics/canister/toxins = 1,
@@ -440,105 +435,104 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 // Dangerous Items
 /datum/uplink_item/dangerous
-	category = "Conspicuous Weapons"
+	category = "目立つ武器"
 
 /datum/uplink_item/dangerous/poisonknife
-	name = "Poisoned Knife"
-	desc = "A knife that is made of two razor sharp blades, it has a secret compartment in the handle to store liquids which are injected when stabbing something."
+	name = "毒入りナイフ"
+	desc = "カミソリのような鋭い2枚の刃でできたナイフで、柄の部分には何かを刺すときに注入する液体を入れるための秘密の収納スペースがあります。"
 	item = /obj/item/kitchen/knife/poison
 	cost = 8 // all in all it's not super stealthy and you have to get some chemicals yourself
 
 /datum/uplink_item/dangerous/rawketlawnchair
-	name = "84mm Rocket Propelled Grenade Launcher"
-	desc = "A reusable rocket propelled grenade launcher preloaded with a low-yield 84mm HE round. \
-		Guaranteed to send your target out with a bang or your money back!"
+	name = "84mm ロケット弾発射機"
+	desc = "再使用可能なロケット弾ランチャーで、低収量の84mmHE弾を予め装填している。 \
+		発射された弾丸は、発射された瞬間に爆発するか、発射された弾丸代が返金されます!"
 	item = /obj/item/gun/ballistic/rocketlauncher
 	cost = 8
 	surplus = 30
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/grenadelauncher
-	name = "Universal Grenade Launcher"
-	desc = "A reusable grenade launcher. Has a capacity of 3 ammo but isn't preloaded. Works with grenades and several other types of explosives."
+	name = "汎用グレネードランチャー"
+	desc = "再使用可能なグレネードランチャー。弾薬は3発まで装填可能だが、プリロードはされていない。手榴弾の他、数種類の爆薬が使用できる。"
 	item = /obj/item/gun/grenadelauncher
 	cost = 6
 	surplus = 30
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/pie_cannon
-	name = "Banana Cream Pie Cannon"
-	desc = "A special pie cannon for a special clown, this gadget can hold up to 20 pies and automatically fabricates one every two seconds!"
+	name = "バナナパイカノン"
+	desc = "最大20個のパイを収納でき、2秒に1個のパイを自動で作る、特別なピエロのための特別なパイキャノンです。"
 	cost = 10
 	item = /obj/item/pneumatic_cannon/pie/selfcharge
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/dangerous/bananashield
-	name = "Bananium Energy Shield"
-	desc = "A clown's most powerful defensive weapon, this personal shield provides near immunity to ranged energy attacks \
-		by bouncing them back at the ones who fired them. It can also be thrown to bounce off of people, slipping them, \
-		and returning to you even if you miss. WARNING: DO NOT ATTEMPT TO STAND ON SHIELD WHILE DEPLOYED, EVEN IF WEARING ANTI-SLIP SHOES."
+	name = "バナニウムエナジーシールド"
+	desc = "ピエロの最も強力な防御武器で、範囲エネルギー攻撃を発射した者に跳ね返し、ほぼ免疫を得ることができる個人用シールド。 \
+		また、投げても跳ね返って人をすり抜け、外しても自分の元に戻ってくる。\
+		警告：展開した状態で盾の上に立たないでください。たとえ滑り止めの靴を履いていてもです。"
 	item = /obj/item/shield/energy/bananium
 	cost = 16
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/dangerous/clownsword
-	name = "Bananium Energy Sword"
-	desc = "An energy sword that deals no damage, but will slip anyone it contacts, be it by melee attack, thrown \
-	impact, or just stepping on it. Beware friendly fire, as even anti-slip shoes will not protect against it."
+	name = "バナニウム・エナジー・ソード"
+	desc = "ダメージは与えられないが、近接攻撃、投擲衝撃、踏みつけなど、接触した者を滑らせるエネルギーソード。\
+	滑り止めのついた靴でも防げないので、フレンドリーファイアに注意。"
 	item = /obj/item/melee/transforming/energy/sword/bananium
 	cost = 3
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/dangerous/bioterror
-	name = "Biohazardous Chemical Sprayer"
-	desc = "A handheld chemical sprayer that allows a wide dispersal of selected chemicals. Especially tailored by the Tiger \
-			Cooperative, the deadly blend it comes stocked with will disorient, damage, and disable your foes... \
-			Use with extreme caution, to prevent exposure to yourself and your fellow operatives."
+	name = "バイオハザード薬液噴霧器"
+	desc = "選択した薬液を広範囲に散布できるハンディタイプの薬液噴霧器です。 \
+			タイガー協同組合が特別に調合したもので、敵を混乱させ、ダメージを与え、行動不能にする効果がある。 \
+			使用には細心の注意を払い、自身や仲間の被ばくを防いでください。"
 	item = /obj/item/reagent_containers/spray/chemsprayer/bioterror
 	cost = 20
 	surplus = 0
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/dangerous/throwingweapons
-	name = "Box of Throwing Weapons"
-	desc = "A box of shurikens and reinforced bolas from ancient Earth martial arts. They are highly effective \
-			throwing weapons. The bolas can knock a target down and the shurikens will embed into limbs."
+	name = "投擲武器の箱"
+	desc = "地球古来の武術に登場する手裏剣と強化ボーラのボックス。非常に効果的な投擲武器である。 \
+			ボーラは対象を倒し、手裏剣は手足に埋め込むことができる。"
 	item = /obj/item/storage/box/syndie_kit/throwing_weapons
 	cost = 3
 	illegal_tech = FALSE
 
 /datum/uplink_item/dangerous/shotgun
-	name = "Bulldog Shotgun"
-	desc = "A fully-loaded semi-automatic drum-fed shotgun. Compatible with all 12g rounds. Designed for close \
-			quarter anti-personnel engagements."
+	name = "ブルドッグ散弾銃"
+	desc = "フルロードのセミオートドラム給弾式ショットガン。12gの弾丸を使用する。近接対人戦闘用に設計されている。"
 	item = /obj/item/gun/ballistic/shotgun/bulldog
 	cost = 8
 	surplus = 40
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/smg
-	name = "C-20r Submachine Gun"
-	desc = "A fully-loaded Scarborough Arms bullpup submachine gun. The C-20r fires .45 rounds with a \
-			24-round magazine and is compatible with suppressors."
+	name = "C-20rサブマシンガン"
+	desc = "スカボロー・アームズのブルパップ式サブマシンガンのフルロードモデル。C-20rは24連マガジンで.45弾を発射し、サプレッサーに対応する。"
 	item = /obj/item/gun/ballistic/automatic/c20r
 	cost = 10
 	surplus = 40
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/superechainsaw
-	name = "Super Energy Chainsaw"
-	desc = "An incredibly deadly modified chainsaw with plasma-based energy blades instead of metal and a slick black-and-red finish. While it rips apart matter with extreme efficiency, it is heavy, large, and monstrously loud. It's blade has been enhanced to do even more damage and knock victims down briefly."
+	name = "スーパーエナジーチェーンソー"
+	desc = "金属の代わりにプラズマを利用したエネルギーブレードを使用し、黒と赤の光沢のある仕上げが施された、非常に殺傷力の高い改造チェーンソーです。 \
+	非常に効率的に物質を切り裂くが、重く、大きく、音も大きい。刃が強化され、より大きなダメージと短時間のノックダウンが可能。"
 	item = /obj/item/chainsaw/energy/doom
 	cost = 22
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/doublesword
-	name = "Double-Bladed Energy Sword"
-	desc = "The double-bladed energy sword does slightly more damage than a standard energy sword and will deflect \
-			all energy projectiles, but requires two hands to wield."
+	name = "両刃のエネルギー剣"
+	desc = "両刃のエネルギー剣は通常のエナジーソードよりわずかにダメージが大きく、\
+	すべてのエネルギー弾をそらすことができるが、振るうには両手が必要である。"
 	item = /obj/item/dualsaber
 	player_minimum = 25
 	cost = 18
@@ -548,26 +542,24 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	return pick(4;0.8,2;0.65,1;0.5)
 
 /datum/uplink_item/dangerous/sword
-	name = "Energy Sword"
-	desc = "The energy sword is an edged weapon with a blade of pure energy. The sword is small enough to be \
-			pocketed when inactive. Activating it produces a loud, distinctive noise."
+	name = "エネルギー剣"
+	desc = "エネルギー剣は、純粋なエネルギーの刃を持つ刃物です。非活性時にはポケットに入るほど小さい。起動すると大きな独特の音がする。"
 	item = /obj/item/melee/transforming/energy/sword/saber
 	cost = 8
 	purchasable_from = ~UPLINK_CLOWN_OPS
 
 /datum/uplink_item/dangerous/shield
-	name = "Energy Shield"
-	desc = "An incredibly useful personal shield projector, capable of reflecting energy projectiles and defending \
-			against other attacks. Pair with an Energy Sword for a killer combination."
+	name = "エネルギー楯"
+	desc = "エネルギー弾を反射し、他の攻撃から身を守ることができる非常に便利な個人用シールドプロジェクター。エネルギー剣との組み合わせは最強。"
 	item = /obj/item/shield/energy
 	cost = 16
 	surplus = 20
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/flamethrower
-	name = "Flamethrower"
-	desc = "A flamethrower, fueled by a portion of highly flammable biotoxins stolen previously from Nanotrasen \
-			stations. Make a statement by roasting the filth in their own greed. Use with caution."
+	name = "火炎放射器"
+	desc = "以前、ナノトラセンステーションから盗んだ高燃焼性バイオトキシンの一部を燃料とする火炎放射器。\
+	欲にまみれた汚物どもを炙り出すことで、その存在を主張する。使用には注意が必要だ。"
 	item = /obj/item/flamethrower/full/tank
 	cost = 4
 	surplus = 40
@@ -575,15 +567,15 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	illegal_tech = FALSE
 
 /datum/uplink_item/dangerous/rapid
-	name = "Gloves of the North Star"
-	desc = "These gloves let the user punch people very fast. Does not improve weapon attack speed or the meaty fists of a hulk."
+	name = "北斗の籠手"
+	desc = "パンチを高速に繰り出すことができるグローブです。武器の攻撃速度やハルクのような肉厚な拳は向上しない。"
 	item = /obj/item/clothing/gloves/rapid
 	cost = 8
 
 /datum/uplink_item/dangerous/guardian
-	name = "Holoparasites"
-	desc = "Though capable of near sorcerous feats via use of hardlight holograms and nanomachines, they require an \
-			organic host as a home base and source of fuel. Holoparasites come in various types and share damage with their host."
+	name = "ホロパラサイト"
+	desc = "ハードライト・ホログラムやナノマシンを使って魔術に近い能力を発揮するが、\
+	本拠地と燃料源として有機的な宿主を必要とする。ホロパラミットには様々なタイプがあり、宿主とダメージを共有する。"
 	item = /obj/item/guardiancreator/tech
 	cost = 18
 	surplus = 10
@@ -592,103 +584,96 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	restricted = TRUE
 
 /datum/uplink_item/dangerous/machinegun
-	name = "L6 Squad Automatic Weapon"
-	desc = "A fully-loaded Aussec Armoury belt-fed machine gun. \
-			This deadly weapon has a massive 50-round magazine of devastating 7.12x82mm ammunition."
+	name = "L6分隊自動小銃"
+	desc = "Aussec Armoury製ベルト給弾式機関銃のフル装備。この凶器は7.12x82mm弾を50発装填できる大容量だ"
 	item = /obj/item/gun/ballistic/automatic/l6_saw
 	cost = 18
 	surplus = 0
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/carbine
-	name = "M-90gl Carbine"
-	desc = "A fully-loaded, specialized three-round burst carbine that fires 5.56mm ammunition from a 30 round magazine \
-			with a toggleable 40mm underbarrel grenade launcher."
+	name = "M-90gl カービン"
+	desc = "30連マガジンから5.56mm弾を発射し、トグル式の40mmアンダーバレルグレネードランチャーを備えた、フルロードの3連バースト専用カービン。"
 	item = /obj/item/gun/ballistic/automatic/m90
 	cost = 14
 	surplus = 50
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/powerfist
-	name = "Power Fist"
-	desc = "The power-fist is a metal gauntlet with a built-in piston-ram powered by an external gas supply.\
-			Upon hitting a target, the piston-ram will extend forward to make contact for some serious damage. \
-			Using a wrench on the piston valve will allow you to tweak the amount of gas used per punch to \
-			deal extra damage and hit targets further. Use a screwdriver to take out any attached tanks."
+	name = "パワーフィスト"
+	desc = "パワーフィストは、外部ガス供給により作動するピストンラムを内蔵した金属製のガントレットである。\
+	ピストンラムが前方に伸び、ターゲットに当たると大きなダメージを与える。\
+	ピストンバルブのレンチを操作することで、1回のパンチで使用するガスの量を調整し、より大きなダメージと命中率を得ることができます。\
+	付属のタンクはドライバーで取り外してください。"
 	item = /obj/item/melee/powerfist
 	cost = 6
 
 /datum/uplink_item/dangerous/sniper
-	name = "Sniper Rifle"
-	desc = "Ranged fury, Syndicate style. Guaranteed to cause shock and awe or your TC back!"
+	name = "狙撃銃"
+	desc = "シンジケート流のレンジ・フューリー。衝撃と畏怖を与えるか、TCを返却することを保証します。"
 	item = /obj/item/gun/ballistic/automatic/sniper_rifle/syndicate
 	cost = 16
 	surplus = 25
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/pistol
-	name = "Stechkin Pistol"
-	desc = "A small, easily concealable handgun that uses 10mm auto rounds in 8-round magazines and is compatible \
-			with suppressors."
+	name = "ステフキン拳銃"
+	desc = "8連マガジンで10mmオート弾を使用し、サプレッサーに対応した、小型で隠しやすいハンドガンです。"
 	item = /obj/item/gun/ballistic/automatic/pistol
 	cost = 7
 	purchasable_from = ~UPLINK_CLOWN_OPS
 
 /datum/uplink_item/dangerous/bolt_action
-	name = "Surplus Rifle"
-	desc = "A horribly outdated bolt action weapon. You've got to be desperate to use this."
+	name = "余剰ライフル"
+	desc = "恐ろしく時代遅れのボルトアクション武器。これを使うには必死でなければならない。"
 	item = /obj/item/gun/ballistic/rifle/boltaction
 	cost = 2
 	purchasable_from = UPLINK_NUKE_OPS
 	illegal_tech = FALSE
 
 /datum/uplink_item/dangerous/revolver
-	name = "Syndicate Revolver"
-	desc = "A brutally simple Syndicate revolver that fires .357 Magnum rounds and has 7 chambers."
+	name = "シンジケートの回転式拳銃"
+	desc = ".357マグナム弾を発射し、7発装填できる残酷なほどシンプルなシンジケートの回転式拳銃。"
 	item = /obj/item/gun/ballistic/revolver
 	cost = 12
 	surplus = 50
 	purchasable_from = ~UPLINK_CLOWN_OPS
 
 /datum/uplink_item/dangerous/foamsmg
-	name = "Toy Submachine Gun"
-	desc = "A fully-loaded Donksoft bullpup submachine gun that fires riot grade darts with a 20-round magazine."
+	name = "玩具用サブマシンガン"
+	desc = "20発の弾倉で暴動用ダーツを発射するドンクソフト・ブルパップ・サブマシンガンのフルロード版。"
 	item = /obj/item/gun/ballistic/automatic/c20r/toy
 	cost = 5
 	surplus = 0
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/dangerous/foammachinegun
-	name = "Toy Machine Gun"
-	desc = "A fully-loaded Donksoft belt-fed machine gun. This weapon has a massive 50-round magazine of devastating \
-			riot grade darts, that can briefly incapacitate someone in just one volley."
+	name = "玩具用マシンガン"
+	desc = "ドンクソフトベルト給弾式マシンガン。50発の弾倉を持ち、一発で相手を無力化することができる。"
 	item = /obj/item/gun/ballistic/automatic/l6_saw/toy
 	cost = 10
 	surplus = 0
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/dangerous/foampistol
-	name = "Toy Pistol with Riot Darts"
-	desc = "An innocent-looking toy pistol designed to fire foam darts. Comes loaded with riot-grade \
-			darts effective at incapacitating a target."
+	name = "玩具用拳銃とライオットダーツ"
+	desc = "発泡スチロールを発射するおもちゃのピストル。標的を無力化するのに有効な暴動用ダーツが装填されています。"
 	item = /obj/item/gun/ballistic/automatic/toy/pistol/riot
 	cost = 2
 	surplus = 10
 
 /datum/uplink_item/dangerous/semiautoturret
-	name = "Semi-Auto Turret"
-	desc = "An autoturret which shoots semi-automatic ballistic rounds. The turret is bulky \
-			and cannot be moved; upon ordering this item, a smaller beacon will be transported to you \
-			that will teleport the actual turret to it upon activation."
+	name = "セミオート砲塔"
+	desc = "セミオートマチック弾道弾を発射する自動砲塔。このアイテムを注文すると、小型のビーコンが輸送され、\
+	起動時にタレット本体をテレポートさせることができる。"
 	item = /obj/item/sbeacondrop/semiautoturret
 	cost = 8
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/dangerous/heavylaserturret
-	name = "Heavy Laser Turret"
-	desc = "An autoturret which shoots heavy lasers. The turret is bulky \
-			and cannot be moved; upon ordering this item, a smaller beacon will be transported to you \
-			that will teleport the actual turret to it upon activation."
+	name = "重レーザー砲塔"
+	desc = "重レーザーを発射するオートタレット。このアイテムを注文すると、小型のビーコンが輸送され、\
+	起動時にタレット本体をテレポートさせることができる。"
 	item = /obj/item/sbeacondrop/heavylaserturret
 	cost = 12
 	purchasable_from = UPLINK_NUKE_OPS
@@ -696,58 +681,53 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 // Stealthy Weapons
 /datum/uplink_item/stealthy_weapons
-	category = "Stealthy Weapons"
+	category = "非表示の武器"
 
 /datum/uplink_item/stealthy_weapons/combatglovesplus
-	name = "Combat Gloves Plus"
-	desc = "A pair of gloves that are fireproof and shock resistant, however unlike the regular Combat Gloves this one uses nanotechnology \
-			to learn the abilities of krav maga to the wearer."
+	name = "戦闘軍手+"
+	desc = "耐火性、耐衝撃性に優れたグローブだが、通常のコンバットグローブとは異なり、ナノテクノロジーによってクラヴマガの能力を身につけることができる。"
 	item = /obj/item/clothing/gloves/krav_maga/combatglovesplus
 	cost = 5
 	purchasable_from = UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS
 	surplus = 0
 
 /datum/uplink_item/stealthy_weapons/cqc
-	name = "CQC Manual"
-	desc = "A manual that teaches a single user tactical Close-Quarters Combat before self-destructing."
+	name = "ＣＱＣ取扱説明書"
+	desc = "自爆する前に、一人のユーザーに近接戦闘の戦術を教えるマニュアル。"
 	item = /obj/item/book/granter/martial/cqc
 	purchasable_from = UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS
 	cost = 12
 	surplus = 0
 
 /datum/uplink_item/stealthy_weapons/dart_pistol
-	name = "Dart Pistol"
-	desc = "A miniaturized version of a normal syringe gun. It is very quiet when fired and can fit into any \
-			space a small item can."
+	name = "麻酔銃"
+	desc = "通常のシリンジガンを小型化したものです。発射時の音は非常に静かで、小物であればどんなスペースにも収まる。"
 	item = /obj/item/gun/syringe/syndicate
 	cost = 3
 	surplus = 50
 
 /datum/uplink_item/stealthy_weapons/dehy_carp
-	name = "Dehydrated Space Carp"
-	desc = "Looks like a plush toy carp, but just add water and it becomes a real-life space carp! Activate in \
-			your hand before use so it knows not to kill you."
+	name = "宇宙鯉の脱水"
+	desc = "見た目は鯉のぬいぐるみですが、水を入れるだけでリアルな宇宙鯉になります。使用前に手のひらで起動させると、殺さないことを認識します。"
 	item = /obj/item/toy/plush/carpplushie/dehy_carp
 	cost = 1
 
 /datum/uplink_item/stealthy_weapons/edagger
-	name = "Energy Dagger"
-	desc = "A dagger made of energy that looks and functions as a pen when off."
+	name = "エネルギー短剣"
+	desc = "エネルギーで作られた短剣で、オフの時はペンのような見た目と機能を持つ。"
 	item = /obj/item/pen/edagger
 	cost = 3
 
 /datum/uplink_item/stealthy_weapons/martialartskarate
-	name = "Karate Scroll"
-	desc = "This scroll contains the secrets of the ancient martial arts technique of Karate. You will learn \
-			various ways to incapacitate and defeat downed foes."
+	name = "空手巻物"
+	desc = "この巻物には、古武術である空手の技の秘密が書かれています。倒れた敵を無力化し、倒すための様々な方法を学ぶことができます。"
 	item = /obj/item/book/granter/martial/karate
 	cost = 4
 	surplus = 40
 
 /datum/uplink_item/stealthy_weapons/martialarts
-	name = "Martial Arts Scroll"
-	desc = "This scroll contains the secrets of an ancient martial arts technique. You will master unarmed combat, \
-			deflecting all ranged weapon fire, but you also refuse to use dishonorable ranged weaponry."
+	name = "武道巻物"
+	desc = "この巻物には古武術の秘伝が書かれている。あなたは非武装戦闘をマスターし、すべての射撃武器の射撃をそらすが、不名誉な射撃武器の使用も拒否する。"
 	item = /obj/item/book/granter/martial/carp
 	cost = 16
 	player_minimum = 20
@@ -755,24 +735,19 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	purchasable_from = ~(UPLINK_INCURSION | UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/stealthy_weapons/radbow
-	name = "Gamma-Bow"
-	desc = "The energy crossbow's newly developed lethal cousin. Has considerably increased lethality \
-	at the cost of its disabling power. It will synthesize \
-	and fire bolts tipped with dangerous toxins that will disorient and \
-	irradiate targets. It can produce an infinite number of bolts \
-	which automatically recharge roughly 25 seconds after each shot."
+	name = "ガンマ・ボウ"
+	desc = "エナジークロスボウの新型機として開発されたリーサルバージョン。無効化能力を低下させる代償として、致死性を向上させる。\
+	危険な毒素を含んだボルトを合成して発射し、\
+	標的を混乱させ、照射する。発射後約25秒で自動的にリチャージされるボルトを無限に生産することができる。"
 	item = /obj/item/gun/energy/kinetic_accelerator/crossbow/radbow
 	cost = 8
 	surplus = 50
 
 /datum/uplink_item/stealthy_weapons/crossbow
-	name = "Miniature Energy Crossbow"
-	desc = "A short bow mounted across a tiller in miniature. \
-	Small enough to fit into a pocket or slip into a bag unnoticed. \
-	It will synthesize and fire bolts tipped with a disabling \
-	toxin that will damage and disorient targets, causing them to \
-	slur as if inebriated. It can produce an infinite number \
-	of bolts, but takes a small amount of time to automatically recharge after each shot."
+	name = "小エネルギークロスボー"
+	desc = "ショート丈のステルス弓です。ポケットに入れたり、バッグの中に入れても気づかれないほど小さい。\
+	毒素を含んだボルトを発射し、対象者にダメージを与える。毒を盛られた対象は、酔ったように口が滑る。\
+	ボルトは無限に発射できるが、1回発射するごとに自動チャージされるため、わずかな時間がかかる。"
 	item = /obj/item/gun/energy/kinetic_accelerator/crossbow
 	cost = 12
 	surplus = 50
@@ -780,26 +755,24 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 
 /datum/uplink_item/stealthy_weapons/origami_kit
-	name = "Boxed Origami Kit"
-	desc = "This box contains a guide on how to craft masterful works of origami, allowing you to transform normal pieces of paper into \
-			perfectly aerodynamic (and potentially lethal) paper airplanes."
+	name = "箱入りおりがみキット"
+	desc = "この箱には、折り紙の作り方のガイドが入っており、普通の紙が完璧な空力と殺傷力を持つ紙飛行機に変身することができるのです。"
 	item = /obj/item/storage/box/syndie_kit/origami_bundle
 	cost = 6
 	surplus = 20
 	purchasable_from = ~UPLINK_NUKE_OPS
 
 /datum/uplink_item/stealthy_weapons/traitor_chem_bottle
-	name = "Poison Kit"
-	desc = "An assortment of deadly chemicals packed into a compact box. Comes with a syringe for more precise application."
+	name = "毒物キット"
+	desc = "殺傷力の高い薬品の数々をコンパクトなボックスに詰め込みました。より正確に塗布するためのシリンジ付き。"
 	item = /obj/item/storage/box/syndie_kit/chemical
 	cost = 7
 	surplus = 50
 
 /datum/uplink_item/stealthy_weapons/romerol_kit
-	name = "Romerol"
-	desc = "A highly experimental bioterror agent which creates dormant nodules to be etched into the grey matter of the brain. \
-			On death, these nodules take control of the dead body, causing limited revivification, \
-			along with slurred speech, aggression, and the ability to infect others with this agent."
+	name = "ロメロール"
+	desc = "脳の灰白質に刻まれる休眠結節を作り出す、高度に実験的なバイオテロ剤です。\
+	死後、この結節は死体のコントロールを受け、限定的な蘇生、不明瞭な言語、攻撃性、そしてこの薬剤を他者に感染させる能力を引き起こす。"
 	item = /obj/item/storage/box/syndie_kit/romerol
 	cost = 20
 	cant_discount = TRUE
@@ -807,18 +780,18 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	surplus = 0
 
 /datum/uplink_item/stealthy_weapons/sleepy_pen
-	name = "Sleepy Pen"
-	desc = "A syringe disguised as a functional pen, filled with a potent mix of drugs, including a \
-			strong anesthetic and a chemical that prevents the target from speaking. \
-			The pen holds one dose of the mixture, and can be refilled with any chemicals. Note that before the target \
-			falls asleep, they will be able to move and act."
+	name = "麻酔ペン"
+	desc = "機能的なペンに見せかけた注射器には、強力な麻酔薬と、対象が話すのを妨げる化学物質が混ざっているのです。\
+	この注射器には1回分の薬液が入っていて、何度でも入れ替えが可能です。\
+	なお、ターゲットが眠りに落ちる前であれば、動いたり行動したりすることができる。"
 	item = /obj/item/pen/sleepy
 	cost = 5
 	purchasable_from = ~UPLINK_NUKE_OPS
 
 /datum/uplink_item/stealthy_weapons/suppressor
-	name = "Suppressor"
-	desc = "This suppressor will silence the shots of the weapon it is attached to for increased stealth and superior ambushing capability. It is compatible with many small ballistic guns including the Stechkin and C-20r, but not revolvers or energy guns."
+	name = "サプレッサー"
+	desc = "このサプレッサーは、装着した武器の発砲を黙殺し、ステルス性を高め、優れたアンブッシュ能力を発揮します。\
+	ステフキンやC-20rなど多くの小型弾道銃に対応しますが、リボルバーやエネルギーガンは使用できません。"
 	item = /obj/item/suppressor
 	cost = 2
 	surplus = 10
@@ -826,39 +799,39 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 // Ammunition
 /datum/uplink_item/ammo
-	category = "Ammunition"
+	category = "弾薬"
 	surplus = 40
 
 /datum/uplink_item/ammo/pistol
-	name = "10mm Handgun Magazine"
-	desc = "An additional 8-round 10mm magazine; compatible with the Stechkin Pistol."
+	name = "10mm拳銃用マガジン"
+	desc = "10mmマガジン（8連）、ステフキン拳銃と互換性があります。"
 	item = /obj/item/ammo_box/magazine/m10mm
 	cost = 1
 	purchasable_from = ~UPLINK_CLOWN_OPS
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/pistolap
-	name = "10mm Armour Piercing Magazine"
-	desc = "An additional 8-round 10mm magazine; compatible with the Stechkin Pistol. \
-			These rounds are less effective at injuring the target but penetrate protective gear."
+	name = "10mm徹甲弾マガジン"
+	desc = "10mmマガジン（8連）、ステフキン拳銃と互換性があります。\
+			この弾は、標的を負傷させる効果は少ないが、防護服を貫通する。"
 	item = /obj/item/ammo_box/magazine/m10mm/ap
 	cost = 2
 	purchasable_from = ~UPLINK_CLOWN_OPS
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/pistolhp
-	name = "10mm Hollow Point Magazine"
-	desc = "An additional 8-round 10mm magazine; compatible with the Stechkin Pistol. \
-			These rounds are more damaging but ineffective against armour."
+	name = "10mm ＨＰ マガジン"
+	desc = "10mmマガジン（8連）、ステフキン拳銃と互換性があります。\
+			この弾はダメージが大きいが、装甲には効果がない。"
 	item = /obj/item/ammo_box/magazine/m10mm/hp
 	cost = 3
 	purchasable_from = ~UPLINK_CLOWN_OPS
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/pistolfire
-	name = "10mm Incendiary Magazine"
-	desc = "An additional 8-round 10mm magazine; compatible with the Stechkin Pistol. \
-			Loaded with incendiary rounds which inflict little damage, but ignite the target."
+	name = "10mm焼夷弾マガジン"
+	desc = "10mmマガジン（8連）、ステフキン拳銃と互換性があります。 \
+			焼夷弾を装填し、ダメージは少ないが、ターゲットに引火する。"
 	item = /obj/item/ammo_box/magazine/m10mm/fire
 	cost = 2
 	purchasable_from = ~UPLINK_CLOWN_OPS
@@ -870,70 +843,68 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/shotgun/bag
-	name = "12g Ammo Duffel Bag"
-	desc = "A duffel bag filled with enough 12g ammo to supply an entire team, at a discounted price."
+	name = "12g弾丸ダッフルバッグ"
+	desc = "チーム全員分の12g弾を詰めたダッフルバッグを格安で提供。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/ammo/shotgun
 	cost = 14
 
 /datum/uplink_item/ammo/shotgun/buck
-	name = "12g Buckshot Drum"
-	desc = "An additional 8-round buckshot magazine for use with the Bulldog shotgun. Front towards enemy."
+	name = "12gバックショットドラム"
+	desc = "ブルドックショットガン用の追加バックショットマガジン（8発）。"
 	item = /obj/item/ammo_box/magazine/m12g
 
 /datum/uplink_item/ammo/shotgun/dragon
-	name = "12g Dragon's Breath Drum"
-	desc = "An alternative 8-round dragon's breath magazine for use in the Bulldog shotgun. \
-			'I'm a fire starter, twisted fire starter!'"
+	name = "12gドラゴンブレス弾"
+	desc = "ブルドックショットガン用の8連焼夷弾マガジンの代替品です。"
 	item = /obj/item/ammo_box/magazine/m12g/dragon
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/ammo/shotgun/meteor
-	name = "12g Meteorslug Shells"
-	desc = "An alternative 8-round meteorslug magazine for use in the Bulldog shotgun. \
-            Great for blasting airlocks off their frames and knocking down enemies."
+	name = "12gメテオスラッグシェル"
+	desc = "ブルドックショットガン用の8連メテオスラッグマガジンの代替品です。\
+            エアロックのフレームを吹き飛ばし、敵をノックダウンさせるのに最適。"
 	item = /obj/item/ammo_box/magazine/m12g/meteor
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/ammo/shotgun/slug
-	name = "12g Slug Drum"
-	desc = "An additional 8-round slug magazine for use with the Bulldog shotgun. \
-			Now 8 times less likely to shoot your pals."
+	name = "12gスラグドラム"
+	desc = "ブルドックショットガン用の8連スラッグマガジンの増設です。 \
+			強力な弾丸を1発発射する。"
 	cost = 3
 	item = /obj/item/ammo_box/magazine/m12g/slug
 
 /datum/uplink_item/ammo/shotgun/breacher
-	name = "12g Breaching Slugs Drum"
-	desc = "An alternative 8-round breaching slug magazine for use with the Bulldog shotgun. \
-			Great for quickly destroying light barricades such as airlocks and windows."
+	name = "12gブリーチングスラッグドラム"
+	desc = "ブルドックショットガン用の8連ブリーチングスラグマガジンの代替品です。 \
+			エアロックや窓などの軽いバリケードを素早く破壊するのに適しています。"
 	item = /obj/item/ammo_box/magazine/m12g/breacher
 
 /datum/uplink_item/ammo/revolver
-	name = ".357 Speed Loader"
-	desc = "A speed loader that contains seven additional .357 Magnum rounds; usable with the Syndicate revolver. \
-			For when you really need a lot of things dead."
+	name = ".357 スピードローダー"
+	desc = "シンジケートのリボルバーで使用できる、357マグナム弾を7発追加したスピードローダー。\ 本当にたくさんのものを殺したいときに使う。"
 	item = /obj/item/ammo_box/a357
 	cost = 2
 	purchasable_from = ~UPLINK_CLOWN_OPS
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/a40mm
-	name = "40mm Grenade Box"
-	desc = "A box of 40mm HE grenades for use with the M-90gl's under-barrel grenade launcher. \
-			Your teammates will ask you to not shoot these down small hallways."
+	name = "40mm 手榴弾ボックス"
+	desc = "M-90glのアンダーバレルグレネードランチャーに使用する40mmHEグレネードの箱です。 \
+			狭い廊下でこれを撃たないようにと、チームメイトに頼まれる。"
 	item = /obj/item/ammo_box/a40mm
 	cost = 6
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/ammo/smg/bag
-	name = ".45 Ammo Duffel Bag"
-	desc = "A duffel bag filled with enough .45 ammo to supply an entire team, at a discounted price."
+	name = ".45 弾薬ダッフルバッグ"
+	desc = "チーム全員分の45口径の弾薬が入ったダッフルバッグを、割引価格で提供。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/ammo/smg
 	cost = 22 //instead of 27 TC
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/ammo/smg
-	name = ".45 SMG Magazine"
-	desc = "An additional 24-round .45 magazine suitable for use with the C-20r submachine gun."
+	name = ".45 SMG マガジン"
+	desc = "サブマシンガンC-20rに適した24連の.45マガジンを増設。"
 	item = /obj/item/ammo_box/magazine/smgm45
 	cost = 3
 	purchasable_from = UPLINK_NUKE_OPS
@@ -945,27 +916,27 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/sniper/basic
-	name = ".50 Magazine"
-	desc = "An additional standard 6-round magazine for use with .50 sniper rifles."
+	name = ".50 マガジン"
+	desc = ".50スナイパーライフルに使用する標準的な6連マガジンを追加したもの。"
 	item = /obj/item/ammo_box/magazine/sniper_rounds
 
 /datum/uplink_item/ammo/sniper/penetrator
-	name = ".50 Penetrator Magazine"
-	desc = "A 5-round magazine of penetrator ammo designed for use with .50 sniper rifles. \
-			Can pierce walls and multiple enemies."
+	name = ".50 ペネトレータマガジン"
+	desc = ".50スナイパーライフル用に設計されたペネトレータ弾の5連マガジン。 \
+			壁や複数の敵を貫通させることができる。"
 	item = /obj/item/ammo_box/magazine/sniper_rounds/penetrator
 	cost = 5
 
 /datum/uplink_item/ammo/sniper/soporific
-	name = ".50 Soporific Magazine"
-	desc = "A 3-round magazine of soporific ammo designed for use with .50 sniper rifles. Put your enemies to sleep today!"
+	name = ".50 催眠剤マガジン"
+	desc = ".50スナイパーライフル用に設計された催眠弾の3連マガジン。敵を眠らせることができます。"
 	item = /obj/item/ammo_box/magazine/sniper_rounds/soporific
 	cost = 6
 
 /datum/uplink_item/ammo/carbine
-	name = "5.56mm Toploader Magazine"
-	desc = "An additional 30-round 5.56mm magazine; suitable for use with the M-90gl carbine. \
-			These bullets pack less punch than 7.12x82mm rounds, but they still offer more power than .45 ammo."
+	name = "5.56mmトップローダーマガジン"
+	desc = "M-90glカービン用の30連5.56mmマガジン。 \
+			7.12x82mm弾よりパンチ力は劣るが、.45弾よりパワーがある。"
 	item = /obj/item/ammo_box/magazine/m556
 	cost = 3
 	purchasable_from = UPLINK_NUKE_OPS
@@ -978,34 +949,34 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/machinegun/basic
-	name = "7.12x82mm Box Magazine"
-	desc = "A 50-round magazine of 7.12x82mm ammunition for use with the L6 SAW. \
-			By the time you need to use this, you'll already be standing on a pile of corpses."
+	name = "7.12x82mm ボックスマガジン"
+	desc = "L6 SAW用の7.12x82mm弾薬の50連マガジンです。 \
+			これを使う頃には、すでに死体の山の上に立っていることでしょう。"
 	item = /obj/item/ammo_box/magazine/mm712x82
 
 /datum/uplink_item/ammo/machinegun/ap
-	name = "7.12x82mm (Armor Penetrating) Box Magazine"
-	desc = "A 50-round magazine of 7.12x82mm ammunition for use in the L6 SAW; equipped with special properties \
-			to puncture even the most durable armor."
+	name = "7.12x82mm 装甲貫通型ボックスマガジン"
+	desc = "L6 SAWに使用する7.12x82mm弾の50連マガジンのこと。\
+	 		耐久性のある鎧をも穿つ特殊な特性を備えています。"
 	item = /obj/item/ammo_box/magazine/mm712x82/ap
 	cost = 9
 
 /datum/uplink_item/ammo/machinegun/hollow
-	name = "7.12x82mm (Hollow-Point) Box Magazine"
-	desc = "A 50-round magazine of 7.12x82mm ammunition for use in the L6 SAW; equipped with hollow-point tips to help \
-			with the unarmored masses of crew."
+	name = "7.12x82mm ＨＰ ボックスマガジン"
+	desc = "L6 SAWに使用する7.12x82mm弾の50連マガジンのこと。 \
+			大量の非装甲乗組員に有効です。"
 	item = /obj/item/ammo_box/magazine/mm712x82/hollow
 
 /datum/uplink_item/ammo/machinegun/incen
-	name = "7.12x82mm (Incendiary) Box Magazine"
-	desc = "A 50-round magazine of 7.12x82mm ammunition for use in the L6 SAW; tipped with a special flammable \
-			mixture that'll ignite anyone struck by the bullet. Some men just want to watch the world burn."
+	name = "7.12x82mm 焼夷弾ボックスマガジン"
+	desc = "L6 SAWに使用する7.12x82mm弾の50連マガジンのこと。 \
+	弾丸に当たった人を発火させる特殊な可燃性混合物の入ったチップを装着しています。"
 	item = /obj/item/ammo_box/magazine/mm712x82/incen
 
 /datum/uplink_item/ammo/machinegun/match
-	name = "7.12x82mm (Match) Box Magazine"
-	desc = "A 50-round magazine of 7.12x82mm ammunition for use in the L6 SAW; you didn't know there was a demand for match grade \
-			precision bullet hose ammo, but these rounds are finely tuned and perfect for ricocheting off walls all fancy-like."
+	name = "7.12x82mm マッチボックスマガジン"
+	desc = "L6 SAWに使用する7.12x82mm弾の50連マガジンのこと。 \
+	この弾丸は細かく調整されており、壁を跳ね返すのに最適なのです。"
 	item = /obj/item/ammo_box/magazine/mm712x82/match
 	cost = 10
 
@@ -1013,45 +984,44 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/ammo/rocket/basic
-	name = "84mm HE Rocket"
-	desc = "A low-yield anti-personnel HE rocket. Gonna take you out in style!"
+	name = "84mm ＨＥ ロケット"
+	desc = "低出力対人用ＨＥロケット弾。スタイリッシュにあなたを連れ出す"
 	item = /obj/item/ammo_casing/caseless/rocket
 	cost = 3
 
 /datum/uplink_item/ammo/rocket/hedp
-	name = "84mm HEDP Rocket"
-	desc = "A high-yield HEDP rocket; extremely effective against armored targets, as well as surrounding personnel. \
-			Strike fear into the hearts of your enemies."
+	name = "84mm ＨＥＤＰ ロケット"
+	desc = "高威力のＨＥＤＰロケットで、装甲目標や周囲の人員に対して極めて有効。敵の心臓を恐怖に陥れろ。"
 	item = /obj/item/ammo_casing/caseless/rocket/hedp
 	cost = 5
 
 /datum/uplink_item/ammo/pistolaps
-	name = "9mm Handgun Magazine"
-	desc = "An additional 15-round 9mm magazine, compatible with the Stechkin APS pistol, found in the Spetsnaz Pyro bundle."
+	name = "9mm 拳銃マガジン"
+	desc = "'スペツナズパイロバンドル'に同梱されているステフキン・ＡＰＳに対応した15連の9mmマガジンを追加しました。"
 	item = /obj/item/ammo_box/magazine/pistolm9mm
 	cost = 2
 	purchasable_from = UPLINK_NUKE_OPS
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/toydarts
-	name = "Box of Riot Darts"
-	desc = "A box of 40 Donksoft riot darts, for reloading any compatible foam dart magazine. Don't forget to share!"
+	name = "ライオットダーツの箱"
+	desc = "ドンクソフトのライオットダーツ40本入り。互換性のあるフォームダーツマガジンに再装填できます。シェアするのを忘れないでください!"
 	item = /obj/item/ammo_box/foambox/riot
 	cost = 2
 	surplus = 0
 	illegal_tech = FALSE
 
 /datum/uplink_item/ammo/bioterror
-	name = "Box of Bioterror Syringes"
-	desc = "A box full of preloaded syringes, containing various chemicals that seize up the victim's motor \
-			and broca systems, making it impossible for them to move or speak for some time."
+	name = "バイオテロシリンジの箱"
+	desc = "箱いっぱいの注射器には様々な化学物質が入っており、被害者の手足や肺を固め、\
+			しばらくの間、動くことも話すことも不可能にするものである。"
 	item = /obj/item/storage/box/syndie_kit/bioterror
 	cost = 6
 	purchasable_from = UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS
 
 /datum/uplink_item/ammo/bolt_action
-	name = "Surplus Rifle Clip"
-	desc = "A stripper clip used to quickly load bolt action rifles. Contains 5 rounds."
+	name = "余剰ライフルクリップ"
+	desc = "ボルトアクションライフルに素早く装填するために使用するストリッパークリップ。5発入り。"
 	item = 	/obj/item/ammo_box/a762
 	cost = 1
 	purchasable_from = UPLINK_NUKE_OPS
@@ -1059,106 +1029,102 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 //Grenades and Explosives
 /datum/uplink_item/explosives
-	category = "Explosives"
+	category = "爆発物"
 
 /datum/uplink_item/explosives/bioterrorfoam
-	name = "Bioterror Foam Grenade"
-	desc = "A powerful chemical foam grenade which creates a deadly torrent of foam that will mute, blind, confuse, \
-			mutate, and irritate carbon lifeforms. Specially brewed by Tiger Cooperative chemical weapons specialists \
-			using additional spore toxin. Ensure suit is sealed before use."
+	name = "バイオテロ用発泡手榴弾"
+	desc = "強力な化学泡の手榴弾で、致命的な泡の奔流を作り出し、炭素生命体を消音、盲目、混乱、変異、刺激する。\
+	タイガー協同組合の化学兵器専門家により、胞子毒素を追加して特別に醸造された。\
+	使用前にスーツが密閉されていることを確認してください。"
 	item = /obj/item/grenade/chem_grenade/bioterrorfoam
 	cost = 7
 	surplus = 35
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/explosives/bombanana
-	name = "Bombanana"
-	desc = "A banana with an explosive taste! discard the peel quickly, as it will explode with the force of a Syndicate minibomb \
-		a few seconds after the banana is eaten."
+	name = "ボンバナナ"
+	desc = "爆発的な味のバナナ！バナナを食べてから数秒後にシンジケートのミニ爆弾のような勢いで爆発するので、皮はすぐに捨ててください。"
 	item = /obj/item/reagent_containers/food/snacks/grown/banana/bombanana
 	cost = 4 //it is a bit cheaper than a minibomb because you have to take off your helmet to eat it, which is how you arm it
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/explosives/buzzkill
-	name = "Buzzkill Grenade Box"
-	desc = "A box with three grenades that release a swarm of angry bees upon activation. These bees indiscriminately attack friend or foe \
-			with random toxins. Courtesy of the BLF and Tiger Cooperative."
+	name = "バズーキルーの手榴弾箱"
+	desc = "手榴弾が3つ入った箱で、起動すると怒った蜂の大群を放つ。\
+	この蜂はランダムな毒素で敵味方を無差別に攻撃する。タイガー協同組合提供。"
 	item = /obj/item/storage/box/syndie_kit/bee_grenades
 	cost = 16
 	surplus = 35
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/explosives/c4
-	name = "Composition C-4"
-	desc = "C-4 is plastic explosive of the common variety Composition C. You can use it to breach walls, sabotage equipment, or connect \
-			an assembly to it in order to alter the way it detonates. It can be attached to almost all objects and has a modifiable timer with a \
-			minimum setting of 10 seconds."
+	name = "C-4"
+	desc = "C-4はComposition Cという一般的なプラスチック爆弾で、壁を破ったり、設備を破壊したり、\
+	アセンブリを接続して起爆方法を変えたりするのに使用します。\
+	ほとんどのものに取り付けることができ、タイマーは10秒から設定可能です。"
 	item = /obj/item/grenade/plastic/c4
 	cost = 1
 
 /datum/uplink_item/explosives/c4bag
-	name = "Bag of C-4 explosives"
-	desc = "Because sometimes quantity is quality. Contains 10 C-4 plastic explosives."
+	name = "C-4 爆薬の袋"
+	desc = "時には量も質になるから。C-4爆薬が10個入っています。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/c4
 	cost = 8 //20% discount!
 	cant_discount = TRUE
 
 /datum/uplink_item/explosives/x4bag
-	name = "Bag of X-4 explosives"
-	desc = "Contains 3 X-4 shaped plastic explosives. Similar to C4, but with a stronger blast that is directional instead of circular. \
-			X-4 can be placed on a solid surface, such as a wall or window, and it will blast through the wall, injuring anything on the opposite side, while being safer to the user. \
-			For when you want a controlled explosion that leaves a wider, deeper, hole."
+	name = "X-4 爆薬の袋"
+	desc = "X-4型のプラスチック爆薬が3個入っています。C4と似ているが、爆風が強く、円形ではなく方向性がある。\
+	X-4は壁や窓のような固いものの上に置くと、壁を突き破って爆発し、\
+	反対側のものを傷つけ、かつ使用者の安全性を高めます。\
+	を使用すると、より深く、より広い穴を残すために制御された爆発をしたい場合に使用します。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/x4
 	cost = 4 //
 	cant_discount = TRUE
 
 /datum/uplink_item/explosives/clown_bomb_clownops
-	name = "Clown Bomb"
-	desc = "The Clown bomb is a hilarious device capable of massive pranks. It has an adjustable timer, \
-			with a minimum of 60 seconds, and can be bolted to the floor with a wrench to prevent \
-			movement. The bomb is bulky and cannot be moved; upon ordering this item, a smaller beacon will be \
-			transported to you that will teleport the actual bomb to it upon activation. Note that this bomb can \
-			be defused, and some crew may attempt to do so."
+	name = "クラウン爆弾"
+	desc = "ピエロ爆弾は、大規模ないたずらができる陽気な装置です。タイマーは60秒から調整可能で、\
+	動かないようにスパナで床に固定することができます。この爆弾を注文すると、小型のビーコンが輸送され、\
+	起動すると実際の爆弾がそこにテレポートされます。なお、\
+	この爆弾は解除することが可能で、クルーによっては解除を試みることもある。"
 	item = /obj/item/sbeacondrop/clownbomb
 	cost = 15
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/explosives/detomatix
-	name = "Detomatix PDA Cartridge"
-	desc = "When inserted into a personal digital assistant, this cartridge gives you four opportunities to \
-			detonate PDAs of crewmembers who have their message feature enabled. \
-			The concussive effect from the explosion will knock the recipient out for a short period, and deafen them for longer."
+	name = "Detomatix ＰＤＡカートリッジ"
+	desc = "このカートリッジをPDAに差し込むと、メッセージ機能を有効にしているクルーのPDAを爆発させる機会が4回得られる。\
+	爆発による衝撃で受信者は短時間で失神し、長時間に渡って聴覚を失う。"
 	item = /obj/item/cartridge/virus/syndicate
 	cost = 6
 	restricted = TRUE
 
 /datum/uplink_item/explosives/emp
-	name = "EMP Grenades and Implanter Kit"
-	desc = "A box that contains five EMP grenades and an EMP implant with three uses. Useful to disrupt communications, \
-			security's energy weapons and silicon lifeforms when you're in a tight spot."
+	name = "EMP手榴弾とインプランターキット"
+	desc = "EMPグレネード5個とEMPインプラント1個が入った箱で、3つの用途がある。通信の妨害、\
+	セキュリティのエネルギー兵器、シリコン生命体など、いざというときに役立つ。"
 	item = /obj/item/storage/box/syndie_kit/emp
 	cost = 4
 
 /datum/uplink_item/explosives/ducky
-	name = "Exploding Rubber Duck"
-	desc = "A seemingly innocent rubber duck. When placed, it arms, and will violently explode when stepped on."
+	name = "爆発するラバーダック"
+	desc = "一見何の変哲もないラバーダック。置くと武装し、踏むと激しく爆発します。"
 	item = /obj/item/deployablemine/traitor
 	cost = 4
 
 /datum/uplink_item/explosives/doorCharge
-	name = "Airlock Charge"
-	desc = "A small explosive device that can be used to sabotage airlocks to cause an explosion upon opening. \
-			To apply, remove the airlock's maintenance panel and place it within."
+	name = "エアロックチャージ"
+	desc = "エアロックを破壊し、開錠時に爆発させるための小型爆発装置。適用するには、エアロックのメンテナンスパネルを外し、中に入れる。"
 	item = /obj/item/doorCharge
 	cost = 4
 
 /datum/uplink_item/explosives/virus_grenade
-	name = "Fungal Tuberculosis Grenade"
-	desc = "A primed bio-grenade packed into a compact box. Comes with five Bio Virus Antidote Kit (BVAK) \
-			autoinjectors for rapid application on up to two targets each, a syringe, and a bottle containing \
-			the BVAK solution."
+	name = "菌類結核手榴弾"
+	desc = "呼び水付きのバイオ手榴弾をコンパクトなボックスに収めました。\
+	最大2つのターゲットに素早く注入できるバイオウイルス解毒キット（BVAK）自動注入器5個、注射器、BVAK溶液の入ったボトルが付属しています。"
 	item = /obj/item/storage/box/syndie_kit/tuberculosisgrenade
 	cost = 14
 	surplus = 35
@@ -1166,106 +1132,102 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	restricted = TRUE
 
 /datum/uplink_item/explosives/grenadier
-	name = "Grenadier's belt"
-	desc = "A belt containing 26 lethally dangerous and destructive grenades. Comes with an extra multitool and screwdriver."
+	name = "擲弾兵の下紐"
+	desc = "殺傷力の高い危険な手榴弾26個を収納したベルト。マルチツール、ドライバーのおまけ付き。"
 	item = /obj/item/storage/belt/grenade/full
 	purchasable_from = UPLINK_NUKE_OPS
 	cost = 24
 	surplus = 0
 
 /datum/uplink_item/explosives/bigducky
-	name = "High Yield Exploding Rubber Duck"
-	desc = "A seemingly innocent rubber duck. When placed, it arms, and will violently explode when stepped on. \
-			This variant has been fitted with high yield X4 charges for a larger explosion."
+	name = "高収率爆発ゴムアヒル"
+	desc = "一見何の変哲もないラバーダック。置くと武装し、踏むと激しく爆発します。 \
+			このバージョンは、より大きな爆発を実現するために、高収率のX4チャージを装着しています。"
 	item = /obj/item/deployablemine/traitor/bigboom
 	cost = 10
 
 /datum/uplink_item/explosives/pizza_bomb
-	name = "Pizza Bomb"
-	desc = "A pizza box with a bomb cunningly attached to the lid. The timer needs to be set by opening the box; afterwards, \
-			opening the box again will trigger the detonation after the timer has elapsed. Comes with free pizza, for you or your target!"
+	name = "ピザ爆弾"
+	desc = "ピザの箱のフタに、巧妙に爆弾が取り付けられている。箱を開けるとタイマーがセットされ、\
+	その後、再び箱を開けるとタイマー経過後に起爆します。自分もターゲットもピザは無料です。"
 	item = /obj/item/pizzabox/bomb
 	cost = 3
 	surplus = 8
 
 /datum/uplink_item/explosives/soap_clusterbang
-	name = "Slipocalypse Clusterbang"
-	desc = "A traditional clusterbang grenade with a payload consisting entirely of Syndicate soap. Useful in any scenario!"
+	name = "スリップオカリプス"
+	desc = "シンジケートの石けんをペイロードとした伝統的な手榴弾。あらゆるシナリオで活躍する。"
 	item = /obj/item/grenade/clusterbuster/soap
 	cost = 4
 
 /datum/uplink_item/explosives/syndicate_bomb
-	name = "Syndicate Bomb"
-	desc = "The Syndicate bomb is a fearsome device capable of massive destruction. It has an adjustable timer, \
-			with a minimum of 60 seconds, and can be bolted to the floor with a wrench to prevent \
-			movement. The bomb is bulky and cannot be moved; upon ordering this item, a smaller beacon will be \
-			transported to you that will teleport the actual bomb to it upon activation. Note that this bomb can \
-			be defused, and some crew may attempt to do so. \
-			The bomb core can be pried out and manually detonated with other explosives."
+	name = "シンジケート爆弾"
+	desc = "シンジケートの爆弾は、大規模な破壊を可能にする恐ろしい装置だ。最低60秒から調整可能なタイマーがあり、\
+	動かないようにレンチで床にボルトで固定することができます。この爆弾を注文すると、小型のビーコンが輸送され、\
+	起動時に爆弾本体をテレポートさせることができます。この爆弾は解除することができ、一部のクルーは解除を試みるかもしれないことに注意。\
+	爆弾の芯をこじ開け、他の爆薬と一緒に手動で起爆させることができる。"
 	item = /obj/item/sbeacondrop/bomb
 	cost = 12
 
 /datum/uplink_item/explosives/syndicate_detonator
-	name = "Syndicate Detonator"
-	desc = "The Syndicate detonator is a companion device to the Syndicate bomb. Simply press the included button \
-			and an encrypted radio frequency will instruct all live Syndicate bombs to detonate. \
-			Useful for when speed matters or you wish to synchronize multiple bomb blasts. Be sure to stand clear of \
-			the blast radius before using the detonator."
+	name = "シンジケート起爆装置"
+	desc = "シンジケート起爆装置は、シンジケート爆弾のコンパニオンデバイスです。\
+	付属のボタンを押すだけで、暗号化された無線周波数がすべてのシンジケート爆弾の起爆を指示します。スピードが重要な時や、\
+	複数の爆弾を同期して爆発させたい時に便利だ。起爆装置を使用する前に、必ず爆発範囲から離れた場所に立ってください。"
 	item = /obj/item/syndicatedetonator
 	cost = 1
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/explosives/syndicate_minibomb
-	name = "Syndicate Minibomb"
-	desc = "The minibomb is a grenade with a five-second fuse. Upon detonation, it will create a small hull breach \
-			in addition to dealing high amounts of damage to nearby personnel."
+	name = "シンジケート小型爆弾"
+	desc = "シンジケート小型爆弾は5秒間の信管を持つ手榴弾です。爆発すると、\
+	船体に小さな裂け目ができ、近くの人間に大きなダメージを与える。\
+	食品に添加することはできません!"
 	item = /obj/item/grenade/syndieminibomb
 	cost = 5
 	purchasable_from = ~UPLINK_CLOWN_OPS
 
 /datum/uplink_item/explosives/tearstache
-	name = "Teachstache Grenade"
-	desc = "A teargas grenade that launches sticky moustaches onto the face of anyone not wearing a clown or mime mask. The moustaches will \
-		remain attached to the face of all targets for one minute, preventing the use of breath masks and other such devices."
+	name = "口ひげ手榴弾"
+	desc = "マスクをしていない人の顔に粘着性のある口ひげを打ち出す催涙弾。ヒゲは1分間、すべてのターゲットの顔に付着したままとなり、\
+	ブレスマスクなどの使用ができなくなる。"
 	item = /obj/item/grenade/chem_grenade/teargas/moustache
 	cost = 3
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/explosives/viscerators
-	name = "Viscerator Delivery Grenade"
-	desc = "A unique grenade that deploys a swarm of viscerators upon activation, which will chase down and shred \
-			any non-operatives in the area."
+	name = "ビスカレーター手榴弾"
+	desc = "起動時に攻撃的なロボットの群れを展開し、エリア内の非オペレーターを追い詰め、細切れにするユニークなグレネードです。"
 	item = /obj/item/grenade/spawnergrenade/manhacks
 	cost = 6
 	surplus = 35
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/explosives/explosive_flashbulbs
-	name = "Explosive Flashbulb"
-	desc = "A flashbulb stuffed with explosives that when used by an oblivious security officers, will cause a violent explosion."
+	name = "ばくだん電球"
+	desc = "閃光弾の中に爆薬を詰め込み、警備員がそれを使用すると激しく爆発する。"
 	item = /obj/item/flashbulb/bomb
 	cost = 1
 	surplus = 8
 
 //Support and Mechs
 /datum/uplink_item/support
-	category = "Support and Exosuits"
+	category = "サポートとメカ"
 	surplus = 0
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/support/clown_reinforcement
-	name = "Clown Reinforcements"
-	desc = "Call in an additional clown to share the fun, equipped with full starting gear, but no telecrystals."
+	name = "クラウンの援軍"
+	desc = "テレクリスタルはないが、フル装備のクラウンがもう一人いる。"
 	item = /obj/item/antag_spawner/nuke_ops/clown
 	cost = 18
 	purchasable_from = UPLINK_CLOWN_OPS
 	restricted = TRUE
 
 /datum/uplink_item/support/reinforcement
-	name = "Reinforcements"
-	desc = "Call in an additional team member. They won't come with any gear, so you'll have to save some telecrystals \
-			to arm them as well."
+	name = "援軍"
+	desc = "チームメンバーを1人追加で呼び出す。彼らは装備品を持っていないので、テレクリスタルを貯めて武装させる必要があります。"
 	item = /obj/item/antag_spawner/nuke_ops
 	cost = 24
 	refundable = TRUE
@@ -1273,139 +1235,134 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	restricted = TRUE
 
 /datum/uplink_item/support/reinforcement/assault_borg
-	name = "Syndicate Assault Cyborg"
-	desc = "A cyborg designed and programmed for systematic extermination of non-Syndicate personnel. \
-			Comes equipped with a self-resupplying LMG, a grenade launcher, energy sword, emag, pinpointer, flash and crowbar."
+	name = "シンジケート強襲サイボーグ"
+	desc = "シンジケート以外の人間を組織的に抹殺するために プログラムされたサイボーグ。\
+	自給式LMG、グレネードランチャー、エナジーソード、エマグ、ピンポインター、フラッシュ、バールを装備している。"
 	item = /obj/item/antag_spawner/nuke_ops/borg_tele/assault
 	refundable = TRUE
 	cost = 64
 	restricted = TRUE
 
 /datum/uplink_item/support/reinforcement/medical_borg
-	name = "Syndicate Medical Cyborg"
-	desc = "A combat medical cyborg. Has limited offensive potential, but makes more than up for it with its support capabilities. \
-			It comes equipped with a nanite hypospray, a medical beamgun, combat defibrillator, full surgical kit including an energy saw, an emag, pinpointer and flash. \
-			Thanks to its organ storage bag, it can perform surgery as well as any humanoid."
+	name = "シンジケート医療用サイボーグ"
+	desc = "戦闘用医療サイボーグ。攻撃力は低いが、それを補って余りある支援能力を持つ。ナナイトハイポスプレー、\
+	医療用ビームガン、戦闘用除細動器、エナジーソー、ＥＭＡＧ、ピンポインター、フラッシュを含む手術用具一式が装備されている。\
+	臓器収納バッグのおかげで 人型と同等の手術ができる。"
 	item = /obj/item/antag_spawner/nuke_ops/borg_tele/medical
 	refundable = TRUE
 	cost = 32
 	restricted = TRUE
 
 /datum/uplink_item/support/reinforcement/saboteur_borg
-	name = "Syndicate Saboteur Cyborg"
-	desc = "A streamlined engineering cyborg, equipped with covert modules. Also incapable of leaving the welder in the shuttle. \
-			Aside from regular Engineering equipment, it comes with a special destination tagger that lets it traverse disposals networks. \
-			Its chameleon projector lets it disguise itself as a Nanotrasen cyborg, on top it has thermal vision and a pinpointer."
+	name = "シンジケート妨害工作サイボーグ"
+	desc = "流線型の工学サイボーグで、秘密裏にモジュールを装備している。通常の工学機器に加え、\
+	ディスポーザブルネットワークを通過できる特殊なデスティネーションタガーが付属している。\
+	カメレオンプロジェクターで ナノトラセンサイボーグに変身し サーマルビジョンとピンポインターを装備。"
 	item = /obj/item/antag_spawner/nuke_ops/borg_tele/saboteur
 	refundable = TRUE
 	cost = 32
 	restricted = TRUE
 
 /datum/uplink_item/support/gygax
-	name = "Dark Gygax Exosuit"
-	desc = "A lightweight exosuit, painted in a dark scheme. Its speed and equipment selection make it excellent \
-			for hit-and-run style attacks. Features an incendiary carbine, flash bang launcher, teleporter, ion thrusters and a Tesla energy array."
+	name = "ダーク・ガイガックスメカ"
+	desc = "ダークカラーに塗装された軽量メカ。スピードと装備の充実により、ヒット＆アウェイ的な攻撃に優れている。\
+	焼夷弾、フラッシュバングランチャー、テレポーター、イオンスラスター、テスラエネルギーアレイを装備している。"
 	item = /obj/mecha/combat/gygax/dark/loaded
 	cost = 80
 
 /datum/uplink_item/support/honker
-	name = "Dark H.O.N.K."
-	desc = "A clown combat mech equipped with bombanana peel and tearstache grenade launchers, as well as the ubiquitous HoNkER BlAsT 5000."
+	name = "ダークH.O.N.K."
+	desc = "爆弾バナナピールと催涙弾ランチャー、そして驚異のホンカーブラスト5000を装備したクラウン戦闘メカ。"
 	item = /obj/mecha/combat/honker/dark/loaded
 	cost = 80
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/support/mauler
-	name = "Mauler Exosuit"
-	desc = "A massive and incredibly deadly military-grade exosuit. Features long-range targeting, thrust vectoring \
-			and deployable smoke. Comes equipped with an LMG, scattershot carbine, missile rack, an antiprojectile armor booster and a Tesla energy array."
+	name = "モーラ・メカ"
+	desc = "巨大で殺傷力の高い軍用メカ。長距離照準、スラストベクタリング、展開式スモークを装備。\
+	マシンガン、ラピッドファイア・ショットガン、ミサイルラック、アーマーブースター、テスラエネルギーアレイを装備している。"
 	item = /obj/mecha/combat/marauder/mauler/loaded
 	cost = 140
 
 // Stealth Items
 /datum/uplink_item/stealthy_tools
-	category = "Stealth Gadgets"
+	category = "ステルス機器"
 
 /datum/uplink_item/stealthy_tools/agent_card
-	name = "Agent Identification Card"
-	desc = "Agent cards prevent artificial intelligences from tracking the wearer, and can copy access \
-			from other identification cards. The access is cumulative, so scanning one card does not erase the \
-			access gained from another. In addition, they can be forged to display a new assignment and name. \
-			This can be done an unlimited amount of times. Some Syndicate areas and devices can only be accessed \
-			with these cards."
+	name = "代理店IDカード"
+	desc = "代理店IDカードは、人工知能による装着者の追跡を防ぐとともに、他の身分証明書からのアクセスをコピーすることができます。\
+	アクセス権は累積されるため、あるカードをスキャンしても、他のカードから得たアクセス権は消えません。\
+	また、偽造して新しい任務と名前を表示することも可能です。\
+	シンジケートの一部のエリアや機器には、このカードでしかアクセスできません。"
 	item = /obj/item/card/id/syndicate
 	cost = 2
 
 /datum/uplink_item/stealthy_tools/ai_detector
-	name = "Artificial Intelligence Detector"
-	desc = "A functional multitool that turns red when it detects an artificial intelligence watching it, and can be \
-			activated to display their exact viewing location and nearby security camera blind spots. Knowing when \
-			an artificial intelligence is watching you is useful for knowing when to maintain cover, and finding nearby \
-			blind spots can help you identify escape routes."
+	name = "人工知能検出器"
+	desc = "人工知能が見ていることを検知すると赤くなり、その正確な視聴位置や近くの防犯カメラの死角を表示することができる機能的なマルチツールです。\
+	人工知能に監視されていることを知ることで、身を隠すタイミングを計ったり、近くの死角を見つけることで逃げ道を確保したりするのに役立ちます。"
 	item = /obj/item/multitool/ai_detect
 	cost = 1
 
 /datum/uplink_item/stealthy_tools/chameleon
-	name = "Chameleon Kit"
-	desc = "A set of items that contain chameleon technology allowing you to disguise as pretty much anything on the station, and more! \
-			Due to budget cuts, the shoes don't provide protection against slipping."
+	name = "変装キット"
+	desc = "変身技術が搭載されたアイテムのセットで、駅にあるあらゆるものに変身することができます。\
+	予算削減のため、靴には滑り止めがついていません。"
 	item = /obj/item/storage/box/syndie_kit/chameleon
 	cost = 2
 	purchasable_from = ~UPLINK_NUKE_OPS
 
 /datum/uplink_item/stealthy_tools/chameleon_proj
-	name = "Chameleon Projector"
-	desc = "Projects an image across a user, disguising them as an object scanned with it, as long as they don't \
-			move the projector from their hand. Disguised users move slowly, and projectiles pass over them."
+	name = "偽装装置"
+	desc = "手からプロジェクターを離さない限り、ユーザー全体に画像を投影し、それでスキャンした物体に変装させる。\
+	変装したユーザーはゆっくりと移動し、投射物はその上を通過する。"
 	item = /obj/item/chameleon
 	cost = 7
 
 /datum/uplink_item/stealthy_tools/codespeak_manual
-	name = "Codespeak Manual"
-	desc = "Syndicate agents can be trained to use a series of codewords to convey complex information, which sounds like random concepts and drinks to anyone listening. \
-			This manual teaches you this Codespeak. You can also hit someone else with the manual in order to teach them. This is the deluxe edition, which has unlimited uses."
+	name = "ふちょうマニュアル"
+	desc = "シンジケートのエージェントは、複雑な情報を伝えるために一連のコードワードを使用するように訓練することができます。\
+	このマニュアルは、このコードスピーチを教えてくれるものです。\
+	また、誰かに教えるために、このマニュアルを当てることもできます。これはデラックス版で、使い方は無限大です。"
 	item = /obj/item/codespeak_manual/unlimited
 	cost = 2
 
 /datum/uplink_item/stealthy_tools/combatbananashoes
-	name = "Combat Banana Shoes"
-	desc = "While making the wearer immune to most slipping attacks like regular combat clown shoes, these shoes \
-		can generate a large number of synthetic banana peels as the wearer walks, slipping up would-be pursuers. They also \
-		squeak significantly louder."
+	name = "バナナ闘靴"
+	desc = "通常のコンバットピエロのように足を滑らせる攻撃は受けないが、歩くたびに大量のバナナの皮が発生し、追っ手を滑らせることができる。\
+	また、鳴き声も大きくなります。"
 	item = /obj/item/clothing/shoes/clown_shoes/banana_shoes/combat
 	cost = 8
 	surplus = 0
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/stealthy_tools/taeclowndo_shoes
-	name = "Tae-clown-do Shoes"
-	desc = "A pair of shoes for the most elite agents of the honkmotherland. They grant the mastery of taeclowndo with some honk-fu moves as long as they're worn."
+	name = "テクラウンドーの靴"
+	desc = "最もエリートな道化師のための一足の靴。クラウンの秘伝の武術を習得することができる。"
 	cost = 12
 	item = /obj/item/clothing/shoes/clown_shoes/taeclowndo
 	purchasable_from = UPLINK_CLOWN_OPS
 
 /datum/uplink_item/stealthy_tools/emplight
-	name = "EMP Flashlight"
-	desc = "A small, self-recharging, short-ranged EMP device disguised as a working flashlight. \
-			Useful for disrupting headsets, cameras, doors, lockers and borgs during stealth operations. \
-			Attacking a target with this flashlight will direct an EM pulse at it and consumes a charge."
+	name = "EMP懐中電灯"
+	desc = "小型で自己充電式の短距離電磁パルス装置で、作業用懐中電灯として偽装されています。\
+	ステルス作戦時にヘッドセット、カメラ、ドア、ロッカー、サイボーグなどを混乱させるのに有効。\
+	このフラッシュライトで攻撃するとEMパルスがターゲットに照射され、チャージが消費される。"
 	item = /obj/item/flashlight/emp
 	cost = 3
 	surplus = 30
 
 /datum/uplink_item/stealthy_tools/mulligan
-	name = "Mulligan"
-	desc = "Screwed up and have security on your tail? This handy syringe will give you a completely new identity \
-			and appearance."
+	name = "マリガン"
+	desc = "この注射器を使えば、新しい自分を発見できます。このハンディシリンジは、あなたに全く新しいアイデンティティと外観を与えてくれるでしょう。"
 	item = /obj/item/reagent_containers/syringe/mulligan
 	cost = 3
 	surplus = 30
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/stealthy_tools/syndigaloshes
-	name = "No-Slip Chameleon Shoes"
-	desc = "These shoes will allow the wearer to run on wet floors and slippery objects without falling down. \
-			They do not work on heavily lubricated surfaces."
+	name = "滑りにくい靴"
+	desc = "濡れた床や滑りやすいものでも、転ばずに走れるシューズです。潤滑油の多い路面では使えません。"
 	item = /obj/item/clothing/shoes/chameleon/noslip
 	cost = 3
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
@@ -1416,33 +1373,32 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/stealthy_tools/chambowman
-	name = "Chameleon Bangproof Headset"
-	desc = "A headset reinforced to protect the ears from flashbangs, enhanced with chameleon disguise technology."
+	name = "強化ヘッドセット"
+	desc = "閃光弾から耳を守るために強化されたヘッドセットで、変装技術も強化されている。"
 	item = /obj/item/radio/headset/chameleon/bowman
 	cost = 2
 
 /datum/uplink_item/stealthy_tools/chamweldinggoggles
-	name = "Chameleon Flashproof Glasses"
-	desc = "A pair of glasses reinforced to protect the eyes from welding flashes, enhanced with chameleon disguise technology."
+	name = "強化眼鏡"
+	desc = "溶接の閃光から目を守るために強化されたメガネを、変装技術で強化したもの。"
 	item = /obj/item/clothing/glasses/chameleon/flashproof
 	cost = 2
 
 /datum/uplink_item/stealthy_tools/chaminsuls
-	name = "Chameleon Combat Gloves"
-	desc = "A pair of gloves reinforced with fire and shock resistance, enhanced with chameleon disguise technology."
+	name = "軍手"
+	desc = "耐火性、耐衝撃性を強化し、変装技術で強化したグローブです。"
 	item = /obj/item/clothing/gloves/chameleon/combat
 	cost = 1
 
 /datum/uplink_item/stealthy_tools/jammer
-	name = "Signal Jammer"
-	desc = "This device will disrupt any nearby outgoing wireless signals when activated."
+	name = "信号妨害"
+	desc = "このデバイスは、起動すると近くの発信する無線信号を妨害します。"
 	item = /obj/item/jammer
 	cost = 5
 
 /datum/uplink_item/stealthy_tools/smugglersatchel
-	name = "Smuggler's Satchel"
-	desc = "This satchel is thin enough to be hidden in the gap between plating and tiling; great for stashing \
-			your stolen goods. Comes with a crowbar, a floor tile and some contraband inside."
+	name = "密輸入業者の鞄"
+	desc = "メッキとタイルの隙間に隠せる薄さで、盗品を隠すのに最適なかばん。バール、フロアタイル、密輸品が入っています。"
 	item = /obj/item/storage/backpack/satchel/flat/with_tools
 	cost = 1
 	surplus = 30
@@ -1450,24 +1406,23 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 //Space Suits and Hardsuits
 /datum/uplink_item/suits
-	category = "Space Suits"
+	category = "宇宙服"
 	surplus = 40
 
 /datum/uplink_item/suits/space_suit
-	name = "Syndicate Space Suit"
-	desc = "This red and black Syndicate space suit is less encumbering than Nanotrasen variants, \
-			fits inside bags, and has a weapon slot. Nanotrasen crew members are trained to report red space suit \
-			sightings, however."
+	name = "シンジケート宇宙服"
+	desc = "この赤と黒のシンジケートの宇宙服は、ナノトラセンのものよりも邪魔にならず、バッグの中に入れることができ、\
+	武器スロットも付いている。ナノトラセンのクルーは、赤い宇宙服の目撃情報を報告するよう訓練されている。"
 	item = /obj/item/storage/box/syndie_kit/space
 	cost = 3
 
 /datum/uplink_item/suits/hardsuit
-	name = "Syndicate Hardsuit"
-	desc = "The feared suit of a Syndicate nuclear agent. Features slightly better armoring, a built in jetpack \
-			that runs off standard atmospheric tanks and an advanced team location system. Toggling the suit in and out of \
-			combat mode will allow you all the mobility of a loose fitting uniform without sacrificing armoring. \
-			Additionally the suit is collapsible, making it small enough to fit within a backpack. \
-			Nanotrasen crew who spot these suits are known to panic."
+	name = "赤シンジケート宇宙服"
+	desc = "シンジケートの核工作員が愛用するスーツ。\
+	装甲はやや強化され、大気圧タンクで作動するジェットパックを内蔵し、高度なチームロケーションシステムを備えている。\
+	戦闘モードを切り替えると、装甲を犠牲にすることなく、ゆったりとしたユニフォームのような機動性を発揮することができる。\
+	さらにスーツは折りたたみ式で、バックパックに収納できるほど小さくなっている。\
+	このスーツを見たナノトラセン隊員は パニックに陥るそうだ"
 	item = /obj/item/clothing/suit/space/hardsuit/syndi
 	cost = 7
 	purchasable_from = ~UPLINK_NUKE_OPS //you can't buy it in nuke, because the elite hardsuit costs the same while being better
@@ -1486,36 +1441,36 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	return suit
 
 /datum/uplink_item/suits/hardsuit/elite
-	name = "Elite Syndicate Hardsuit"
-	desc = "An upgraded, elite version of the Syndicate hardsuit. It features fireproofing, and also \
-			provides the user with superior armor and mobility compared to the standard Syndicate hardsuit."
+	name = "精鋭シンジケート宇宙服"
+	desc = "シンジケートの宇宙服をグレードアップしたエリート版。\
+	通常のシンジケートの宇宙服に比べ、耐火性に優れ、優れた装甲と機動性を発揮する。"
 	item = /obj/item/clothing/suit/space/hardsuit/syndi/elite
 	cost = 8
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/suits/hardsuit/shielded
-	name = "Shielded Syndicate Hardsuit"
-	desc = "An upgraded version of the standard Syndicate hardsuit. It features a built-in energy shielding system. \
-			The shields can handle up to three impacts within a short duration and will rapidly recharge while not under fire."
+	name = "シンジケート宇宙服追加シールド付"
+	desc = "シンジケートの標準的な宇宙服のアップグレード版。\
+	エネルギー・シールド・システムを内蔵しているのが特徴。短時間に3回までの衝撃に対応し、非火災時に急速充電される。"
 	item = /obj/item/clothing/suit/space/hardsuit/shielded/syndi
 	cost = 30
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 // Devices and Tools
 /datum/uplink_item/device_tools
-	category = "Misc. Gadgets"
+	category = "その他のガジェット"
 
 /datum/uplink_item/device_tools/cutouts
-	name = "Adaptive Cardboard Cutouts"
-	desc = "These cardboard cutouts are coated with a thin material that prevents discoloration and makes the images on them appear more lifelike. \
-			This pack contains three as well as a crayon for changing their appearances."
+	name = "適応性のある段ボールの切り抜き"
+	desc = "この段ボール製切り絵は、変色を防ぐ薄い素材でコーティングされており、絵柄をよりリアルに見せることができます。\
+	3個と、変身させるためのクレヨンが入っています。"
 	item = /obj/item/storage/box/syndie_kit/cutouts
 	cost = 1
 	surplus = 20
 
 /datum/uplink_item/device_tools/assault_pod
-	name = "Assault Pod Targeting Device"
-	desc = "Use this to select the landing zone of your assault pod."
+	name = "アサルトポッド照準器"
+	desc = "アサルトポッドの着陸地点を選択するときに使用します。"
 	item = /obj/item/assault_pod
 	cost = 30
 	surplus = 0
@@ -1523,110 +1478,104 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	restricted = TRUE
 
 /datum/uplink_item/device_tools/binary
-	name = "Binary Translator Key"
-	desc = "A key that, when inserted into a radio headset, allows you to listen to and talk with silicon-based lifeforms, \
-			such as AI units and cyborgs, over their private binary channel. Caution should \
-			be taken while doing this, as unless they are allied with you, they are programmed to report such intrusions."
+	name = "機械語コード変換装置"
+	desc = "無線ヘッドセットを装着すると、AIユニットやサイボーグなどのシリコン系生命体の専用バイナリーチャンネルを聞き、\
+	会話することができるモジュールです。\
+	ただし、味方でない限りは通報するようプログラムされているため、注意が必要。"
 	item = /obj/item/encryptionkey/binary
 	cost = 4
 	surplus = 75
 	restricted = TRUE
 
 /datum/uplink_item/device_tools/compressionkit
-	name = "Bluespace Compression Kit"
-	desc = "A modified version of a BSRPED that can be used to reduce the size of most items while retaining their original functions! \
-			Does not work on storage items. \
-			Recharge using bluespace crystals. \
-			Comes with 5 charges."
+	name = "ブルースペース圧縮キット"
+	desc = "ナノトラセンデバイスの改良版で、ほとんどのアイテムを本来の機能を保ったまま小型化することが可能です \
+	収納アイテムには使えません。ブルースペース・クリスタルで充電。5回分付属しています。"
 	item = /obj/item/compressionkit
 	cost = 5
 
 /datum/uplink_item/device_tools/shuttlecapsule
-	name = "Bluespace Shuttle Capsule"
-	desc = "Need a mobile base of operations? Those pesky exploration crews keep flying off? Want to do a hit and run on security? Then this \
-			product is for you! The all new bluespace shuttle capsule contains an ENTIRE shuttle withing a capsule you can hold in your hand! \
-			The shuttle provided is a state-of-the-art ship complete with a hacked autolathe, syndicate toolbox, playing cards for those long journeys, \
-			an in-built shuttle interdictor and a single canister of plasma to fuel your adventures! \
-			This innovative shuttle can seat up to 4 passengers, willing or not! Shuttle must be deployed in space or on lavaland, space suits not included."
+	name = "ブルースペースシャトルカプセル"
+	desc = "移動式の作戦基地が必要ですか？厄介な探査クルーが飛び去ってしまう？警備を強化したい？\
+	それなら、この製品はあなたのためにあります! このカプセルにはシャトルが丸ごと1機入っていて、手に取ることができます。\
+	シャトルは最新鋭の船で、ハッキングされた自動旋盤、シンジケートのツールボックス、長旅のためのトランプ、内蔵されたシャトル阻止装置、\
+	冒険の燃料となるプラズマの容器が1つ入っています! この革新的なシャトルは、意思の有無に関わらず最大4人が搭乗できる。\
+	シャトルは宇宙空間かラバランドに設置する必要がある、宇宙服は含まれない。"
 	item = /obj/item/survivalcapsule/shuttle/traitor
 	cost = 8
 	purchasable_from = (UPLINK_INCURSION | UPLINK_TRAITORS)
 
 /datum/uplink_item/device_tools/magboots
-	name = "Blood-Red Magboots"
-	desc = "A pair of magnetic boots with a Syndicate paintjob that assist with freer movement in space or on-station \
-			during gravitational generator failures. These reverse-engineered knockoffs of Nanotrasen's \
-			'Advanced Magboots' slow you down in simulated-gravity environments much like the standard issue variety."
+	name = "赤の磁気ブーツ"
+	desc = "シンジケートの塗装が施されたマグネットブーツで、宇宙空間や重力発生装置の故障時に自由な移動を補助する。\
+	ナノトラセンの「アドバンスドマグブーツ」をリバースエンジニアリングして作られたもので、重力環境下では通常のブーツと同様に動きが鈍くなる。"
 	item = /obj/item/clothing/shoes/magboots/syndie
 	cost = 2
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/device_tools/brainwash_disk
-	name = "Brainwashing Surgery Program"
-	desc = "A disk containing the procedure to perform a brainwashing surgery, allowing you to implant an objective onto a target. \
-	Insert into an Operating Console to enable the procedure."
+	name = "洗脳手術プログラム"
+	desc = "洗脳手術を行うための手順が記されたディスクで、ターゲットに目的を植え付けることができる。オペレーティング・コンソールに挿入することで、手術が可能になります。"
 	item = /obj/item/disk/surgery/brainwashing
 	cost = 5
 
 /datum/uplink_item/device_tools/briefcase_launchpad
-	name = "Briefcase Launchpad"
-	desc = "A briefcase containing a launchpad, a device able to teleport items and people to and from targets up to eight tiles away from the briefcase. \
-			Also includes a remote control, disguised as an ordinary folder. Touch the briefcase with the remote to link it."
+	name = "書類鞄テレポーター"
+	desc = "書類鞄の中には、アイテムや人を最大8タイル先までテレポートさせることができる特殊なテレポーターが入っている。\
+	普通のフォルダに見せかけたリモコンも入っている。リモコンで書類鞄をタッチすると、リンクします。"
 	surplus = 30
 	item = /obj/item/storage/briefcase/launchpad
 	cost = 5
 
 /datum/uplink_item/device_tools/camera_bug
-	name = "Camera Bug"
-	desc = "Enables you to view all cameras on the main network, set up motion alerts and track a target. \
-			Bugging cameras allows you to disable them remotely."
+	name = "監視カメラの盗聴器"
+	desc = "メインネットワーク上のすべてのカメラの表示、モーションアラートの設定、ターゲットの追跡を可能にします。\
+	カメラに盗聴器を仕掛けると、遠隔操作でカメラを無効化することができます。"
 	item = /obj/item/camera_bug
 	cost = 1
 
 /datum/uplink_item/device_tools/military_belt
-	name = "Chest Rig"
-	desc = "A robust seven-slot set of webbing that is capable of holding all manner of tactical equipment."
+	name = "胸部装備"
+	desc = "あらゆるタクティカル装備を収納できる、強力な7スロットウェビングセットです。"
 	item = /obj/item/storage/belt/military
 	cost = 1
 
 /datum/uplink_item/device_tools/emag
-	name = "Cryptographic Sequencer"
-	desc = "The cryptographic sequencer, electromagnetic card, or emag, is a small card that unlocks hidden functions \
-			in electronic devices, subverts intended functions, and easily breaks security mechanisms."
+	name = "電磁カード(EMAG)"
+	desc = "暗号解読機、電磁カード、エマグは、電子機器の隠された機能のロックを解除し、意図した機能を破壊し、\
+	セキュリティ機構を容易に破ることができる小型カードである。"
 	item = /obj/item/card/emag
 	cost = 6
 
 /datum/uplink_item/device_tools/fakenucleardisk
-	name = "Decoy Nuclear Authentication Disk"
-	desc = "It's just a normal disk. Visually it's identical to the real deal, but it won't hold up under closer scrutiny by the Captain. \
-			Don't try to give this to us to complete your objective, we know better!"
+	name = "デコイ核認証ディスク"
+	desc = "普通のディスクだ。見た目は本物と変わらないが、船長の厳しい監視の目を通すと、持ちこたえられない。\
+	これを渡して目的を果たそうなんて思うなよ 我々にだって分別はある！"
 	item = /obj/item/disk/nuclear/fake
 	cost = 1
 	surplus = 1
 	illegal_tech = FALSE
 
 /datum/uplink_item/device_tools/syndicate_teleporter
-	name = "Experimental Syndicate Teleporter"
-	desc = "The Syndicate teleporter is a handheld device that teleports the user 4-8 meters forward. \
-			Beware, teleporting into a wall will make the teleporter do a parallel emergency teleport, \
-			but if that emergency teleport fails, it will kill you instantly. \
-			Has 4 charges, recharges automatically. Warranty voided if exposed to EMP."
+	name = "シンジケート実験用テレポーター"
+	desc = "シンジケートのテレポーターは、前方4～8メートルにテレポートする携帯型デバイスです。\
+	壁にぶつかると平行な緊急テレポートを行うが、その緊急テレポートが失敗すると即死するので注意。\
+	充電は4回で、自動で充電される。電磁パルスを受けた場合、保証は無効となります。"
 	item = /obj/item/storage/box/syndie_kit/teleporter
 	cost = 8
 
 /datum/uplink_item/device_tools/frame
-	name = "F.R.A.M.E. PDA Cartridge"
-	desc = "When inserted into a personal digital assistant, this cartridge gives you five PDA viruses which \
-			when used cause the targeted PDA to become a new uplink with zero TCs, and immediately become unlocked. \
-			You will receive the unlock code upon activating the virus, and the new uplink may be charged with \
-			telecrystals normally."
+	name = "F.R.A.M.E. PDAカートリッジ"
+	desc = "このカートリッジをPDAに挿入すると、5つのPDAウイルスが得られ、使用すると対象のPDAがTCゼロの新しいアップリンクとなり、\
+	直ちにロックが解除されるようになります。 \
+	ウイルスを起動するとアンロックコードが表示され、新しいアップリンクに通常通りテレクリスタルをチャージすることができる。"
 	item = /obj/item/cartridge/virus/frame
 	cost = 4
 	restricted = TRUE
 
 /datum/uplink_item/device_tools/failsafe
-	name = "Failsafe Uplink Code"
-	desc = "When entered the uplink will self-destruct immediately."
+	name = "フェイルセーフアップリンクコード"
+	desc = "入力すると、アップリンクは直ちに自爆する。"
 	item = /obj/effect/gibspawner/generic
 	cost = 1
 	surplus = 0
@@ -1638,104 +1587,101 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 		return
 	U.failsafe_code = U.generate_code()
 	var/code = "[islist(U.failsafe_code) ? english_list(U.failsafe_code) : U.failsafe_code]"
-	to_chat(user, "<span class='warning'>The new failsafe code for this uplink is now : [code].</span>")
+	to_chat(user, "<span class='warning'>このアップリンクの新しいフェイルセーフコードは、現在: [code].</span>")
 	if(user.mind)
-		user.mind.store_memory("Failsafe code for [U.parent] : [code]")
+		user.mind.store_memory("フェールセーフコードの[U.parent] : [code]")
 	return U.parent //For log icon
 
 /datum/uplink_item/device_tools/toolbox
-	name = "Full Syndicate Toolbox"
-	desc = "The Syndicate toolbox is a suspicious black and red. It comes loaded with a full tool set including a \
-			multitool and combat gloves that are resistant to shocks and heat."
+	name = "シンジケートの道具箱"
+	desc = "シンジケートの道具箱は、黒と赤の怪しげな色合いです。\
+	マルチツールや衝撃や熱に強いコンバットグローブなど、充実したツールセットを搭載しています。"
 	item = /obj/item/storage/toolbox/syndicate
 	cost = 1
 	illegal_tech = FALSE
 
 /datum/uplink_item/device_tools/syndie_glue
-	name = "Glue"
-	desc = "A cheap bottle of one use syndicate brand super glue. \
-			Use on any item to make it undroppable. \
-			Be careful not to glue an item you're already holding!"
+	name = "接着剤"
+	desc = "シンジケートブランドの瞬間接着剤の 使い切りタイプです。\
+	どんなものでも、落とせないようにするために使用します。\
+	すでに持っているものを接着しないように注意しよう。"
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 	item = /obj/item/syndie_glue
 	cost = 2
 
 /datum/uplink_item/device_tools/hacked_module
-	name = "Hacked AI Law Upload Module"
-	desc = "When used with an upload console, this module allows you to upload priority laws to an artificial intelligence. \
-			Be careful with wording, as artificial intelligences may look for loopholes to exploit."
+	name = "ハッキングされたAIローアップロードモジュール"
+	desc = "アップロードコンソールと併用することで、人工知能に優先法則をアップロードすることができるモジュールです。\
+	人工知能は抜け道を探すかもしれないので、言葉遣いに注意してください。"
 	item = /obj/item/aiModule/syndicate
 	cost = 3
 
 /datum/uplink_item/device_tools/hypnotic_flash
-	name = "Hypnotic Flash"
-	desc = "A modified flash able to hypnotize targets. If the target is not in a mentally vulnerable state, it will only confuse and pacify them temporarily."
+	name = "催眠電球"
+	desc = "対象を催眠状態にすることができる改造フラッシュ。対象が精神的に脆弱な状態でなければ、一時的に混乱させ、なだめる程度にしかならない。"
 	item = /obj/item/assembly/flash/hypnotic
 	cost = 7
 
 /datum/uplink_item/device_tools/medgun
-	name = "Medbeam Gun"
-	desc = "A wonder of Syndicate engineering, the Medbeam gun, or Medi-Gun enables a medic to keep his fellow \
-			operatives in the fight, even while under fire. Don't cross the streams!"
+	name = "メドビーム砲"
+	desc = "メドビーム砲（メディガン）はシンジケートの驚異的な技術で、メディックは銃撃を受けても仲間の戦闘を継続させることができる。\
+	FUCK NIGGERS||"
 	item = /obj/item/gun/medbeam
 	cost = 14
 	purchasable_from = UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS
 
 /datum/uplink_item/device_tools/singularity_beacon
-	name = "Power Beacon"
-	desc = "When screwed to wiring attached to an electric grid and activated, this large device pulls any \
-			active gravitational singularities or tesla balls towards it. This will not work when the engine is still \
-			in containment. Because of its size, it cannot be carried. Ordering this \
-			sends you a small beacon that will teleport the larger beacon to your location upon activation."
+	name = "電気ビーコン"
+	desc = "電気系統に接続された配線にねじ込んで作動させると、この大きな装置が、活動している重力特異点やテスラ球を引き寄せる。\
+	エンジンが封じ込められたままの状態では作動しない。その大きさゆえ、持ち運びはできません。\
+	この装置を注文すると、小型のビーコンが送られてきて、起動すると大型のビーコンがあなたのところにテレポートされる。"
 	item = /obj/item/sbeacondrop
 	cost = 10
 
 /datum/uplink_item/device_tools/powersink
-	name = "Power Sink"
-	desc = "When screwed to wiring attached to a power grid and activated, this large device lights up and places excessive \
-			load on the grid, causing a station-wide blackout. The sink is large and cannot be stored in most \
-			traditional bags and boxes. Caution: Will explode if the powernet contains sufficient amounts of energy."
+	name = "受電装置"
+	desc = "送電網に接続された配線にねじ込んで作動させると、この大型装置が点灯して送電網に過剰な負荷をかけ、局地的な停電を引き起こす。\
+	シンクは大きく、従来のほとんどのバッグや箱に収納することができない。\
+	注意 パワーネットに十分なエネルギーが含まれている場合、爆発する。"
 	item = /obj/item/powersink
 	cost = 10
 	player_minimum = 35
 
 /datum/uplink_item/device_tools/stimpack
-	name = "Stimpack"
-	desc = "Stimpacks, the tool for many great heroes, make you mostly immune to any form of slowdown (including damage slowdown) \
-			or stamina damage for about 5 minutes after injection."
+	name = "スティンパック"
+	desc = "多くの偉大なヒーローの道具であるスティンパックは注入後約5分間、\
+	あらゆる形態のスローダウン（ダメージスローダウンを含む）やスタミナダメージをほとんど受けないようにする。"
 	item = /obj/item/reagent_containers/hypospray/medipen/stimulants
 	cost = 5
 	surplus = 90
 
 /datum/uplink_item/device_tools/medkit
-	name = "Syndicate Combat Medic Kit"
-	desc = "This first aid kit is a suspicious brown and red. Included is a combat stimulant injector \
-			for rapid healing, a medical night vision HUD for quick identification of injured personnel, \
-			and other supplies helpful for a field medic."
+	name = "シンジケート衛生兵キット"
+	desc = "茶色と赤の怪しい救急箱です。傷の回復を早めるコンバットインジェクターや、負傷者を素早く確認するためのメディカルナイトビジョンHUDなど、\
+	フィールドメディックに必要なものが入っています。"
 	item = /obj/item/storage/firstaid/tactical
 	cost = 4
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/device_tools/soap
-	name = "Syndicate Soap"
-	desc = "A sinister-looking surfactant used to clean blood stains to hide murders and prevent DNA analysis. \
-			You can also drop it underfoot to slip people."
+	name = "シンジケート石鹸"
+	desc = "殺人事件の隠蔽やDNA鑑定を防ぐために、血液の汚れを落とすのに使われる不吉な感じのする界面活性剤です。\
+	足元に落として人を滑らせることもできる。"
 	item = /obj/item/soap/syndie
 	cost = 1
 	surplus = 50
 	illegal_tech = FALSE
 
 /datum/uplink_item/device_tools/surgerybag
-	name = "Syndicate Surgery Duffel Bag"
-	desc = "The Syndicate surgery duffel bag is a toolkit containing all surgery tools, surgical drapes, \
-			a Syndicate brand MMI, a straitjacket, and a muzzle."
+	name = "シンジケート手術用ダッフルバッグ"
+	desc = "シンジケートの手術用ダッフルバッグは、手術道具一式、手術用ドレープ、シンジケートブランドのMMI、拘束衣、口輪を入れたツールキットです。"
 	item = /obj/item/storage/backpack/duffelbag/syndie/surgery
 	cost = 3
 
 /datum/uplink_item/device_tools/encryptionkey
-	name = "Syndicate Encryption Key"
-	desc = "A key that, when inserted into a radio headset, allows you to listen to all station department channels \
-			as well as talk on an encrypted Syndicate channel with other agents that have the same key."
+	name = "シンジケート暗号鍵"
+	desc = "無線機のヘッドセットに差し込むと、すべての局部チャンネルを聞くことができ、\
+	同じキーを持つ他のエージェントと暗号化されたシンジケートチャンネルで話すこともできるようになるキーです。"
 	item = /obj/item/encryptionkey/syndicate
 	cost = 2
 	surplus = 75
@@ -1743,129 +1689,127 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	restricted = TRUE
 
 /datum/uplink_item/device_tools/syndietome
-	name = "Syndicate Tome"
-	desc = "Using rare artifacts acquired at great cost, the Syndicate has reverse engineered \
-			the seemingly magical books of a certain cult. Though lacking the esoteric abilities \
-			of the originals, these inferior copies are still quite useful, being able to provide \
-			both weal and woe on the battlefield, even if they do occasionally bite off a finger."
+	name = "シンジケートの聖書"
+	desc = "シンジケートは多額の費用を投じて入手した希少なアーティファクトを使い、\
+	ある教団の一見魔法のような書物をリバースエンジニアリングしています。\
+	オリジナルに比べれば難解な能力を持っているが、戦場では指を食いちぎられることもあるが、災いも喜びも与えてくれる。"
 	item = /obj/item/storage/book/bible/syndicate
 	cost = 3
 
 /datum/uplink_item/device_tools/potion
-	name = "Syndicate Sentience Potion"
+	name = "シンジケートの感覚ポーション"
 	item = /obj/item/slimepotion/slime/sentience/nuclear
-	desc = "A potion recovered at great risk by undercover Syndicate operatives and then subsequently modified with Syndicate technology. \
-			Using it will make any animal sentient, and bound to serve you, as well as implanting an internal radio for communication and an internal ID card for opening doors."
+	desc = "シンジケートの秘密工作員が危険を冒して回収し、その後シンジケートの技術で改造されたポーション。\
+	どんな動物でも知覚を持ち、あなたに仕えるようになります。また、通信用の無線機とドアを開けるためのIDカードも内蔵しています。"
 	cost = 4
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 	restricted = TRUE
 
 /datum/uplink_item/device_tools/suspiciousphone
-	name = "Protocol CRAB-17 Phone"
-	desc = "The Protocol CRAB-17 Phone, a phone borrowed from an unknown third party, it can be used to crash the space market, funneling the losses of the crew to your bank account.\
-	The crew can move their funds to a new banking site though, unless they HODL, in which case they deserve it."
+	name = "プロトコル CRAB-17 電話番号"
+	desc = "プロトコルCRAB-17電話、未知の第三者から借りた電話、それは宇宙市場をクラッシュさせるために使用され、\
+	乗組員の損失をあなたの銀行口座に流すことができます。"
 	item = /obj/item/suspiciousphone
 	restricted = TRUE
 	cost = 8
 
 /datum/uplink_item/device_tools/thermal
-	name = "Thermal Imaging Glasses"
-	desc = "These goggles can be turned to resemble common eyewear found throughout the station. \
-			They allow you to see organisms through walls by capturing the upper portion of the infrared light spectrum, \
-			emitted as heat and light by objects. Hotter objects, such as warm bodies, cybernetic organisms \
-			and artificial intelligence cores emit more of this light than cooler objects like walls and airlocks."
+	name = "熱視力の眼鏡"
+	desc = "このゴーグルは、普通のメガネのように見えることもあります。\
+	物体から熱や光として放射される赤外線スペクトルの上部をとらえ、壁越しに生物を見ることができる。\
+	熱を持った物体、サイバネティック・オーガニズム、\
+	人工知能のコアなどは、壁やエアロックなどの低温の物体よりも多くの光を発している。"
 	item = /obj/item/clothing/glasses/thermal/syndi
 	cost = 3
 
 // Implants
 /datum/uplink_item/implants
-	category = "Implants"
+	category = "インプラント"
 	surplus = 50
 
 /datum/uplink_item/implants/adrenal
-	name = "Adrenal Implant"
-	desc = "An implant injected into the body, and later activated at the user's will. It will inject a chemical \
-			cocktail which removes all incapacitating effects, lets the user run faster and has a mild healing effect."
+	name = "副腎インプラント"
+	desc = "体内に注入され、後にユーザーの意思で作動するインプラント。\
+	化学物質を注入することで、無力化効果を取り除き、より速く走ることができるようになり、軽い治癒効果もある。"
 	item = /obj/item/storage/box/syndie_kit/imp_adrenal
 	cost = 8
 	player_minimum = 20
 
 /datum/uplink_item/implants/antistun
-	name = "CNS Rebooter Implant"
-	desc = "This implant will help you get back up on your feet faster after being stunned. Comes with an autosurgeon."
+	name = "中枢神経系インプラント"
+	desc = "このインプラントは、気絶した後の立ち直りを早くしてくれる。オートサージェリー付き。"
 	item = /obj/item/autosurgeon/syndicate/anti_stun
 	cost = 12
 	surplus = 0
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/implants/freedom
-	name = "Freedom Implant"
-	desc = "An implant injected into the body and later activated at the user's will. It will attempt to free the \
-			user from common restraints such as handcuffs."
+	name = "自由インプラント"
+	desc = "体内に注入され、後にユーザーの意思で作動するインプラント。 \
+			手錠のような一般的な拘束からユーザーを解放しようとするものです。"
 	item = /obj/item/storage/box/syndie_kit/imp_freedom
 	cost = 4
 
 /datum/uplink_item/implants/microbomb
-	name = "Microbomb Implant"
-	desc = "An implant injected into the body, and later activated either manually or automatically upon death. \
-			The more implants inside of you, the higher the explosive power. \
-			This will permanently destroy your body, however."
+	name = "小型爆弾インプラント"
+	desc = "体内に注入され、死亡時に手動または自動で作動するインプラント。 \
+			内部にインプラントがあればあるほど、爆発力は高くなります。\
+			魔法ではなく、間違いなく本物です。"
 	item = /obj/item/storage/box/syndie_kit/imp_microbomb
 	cost = 3
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/implants/macrobomb
-	name = "Macrobomb Implant"
-	desc = "An implant injected into the body, and later activated either manually or automatically upon death. \
-			Upon death, releases a massive explosion that will wipe out everything nearby."
+	name = "大型爆弾インプラント"
+	desc = "体内に注入され、死亡時に手動または自動で作動するインプラント。死亡時に大爆発を起こし、近くのものを全て消し去る。"
 	item = /obj/item/storage/box/syndie_kit/imp_macrobomb
 	cost = 20
 	purchasable_from = UPLINK_NUKE_OPS
 	restricted = TRUE
 
 /datum/uplink_item/implants/radio
-	name = "Internal Syndicate Radio Implant"
-	desc = "An implant injected into the body, allowing the use of an internal Syndicate radio. \
-			Used just like a regular headset, but can be disabled to use external headsets normally and to avoid detection."
+	name = "シンジケート無線体内インプラント"
+	desc = "体内に注入することで、シンジケートの無線機を使用できるようになるインプラント。\
+	通常のヘッドセットと同様に使用するが、外部ヘッドセットを正常に使用し、発見されないように無効化することができる。"
 	item = /obj/item/storage/box/syndie_kit/imp_radio
 	cost = 4
 	purchasable_from = ~UPLINK_INCURSION //To prevent traitors from immediately outing the hunters to security.
 	restricted = TRUE
 
 /datum/uplink_item/implants/reviver
-	name = "Reviver Implant"
-	desc = "This implant will attempt to revive and heal you if you lose consciousness. Comes with an autosurgeon."
+	name = "蘇生インプラント"
+	desc = "意識を失ったときに、蘇生と治癒を試みるインプラントです。オートサージェリー付き。"
 	item = /obj/item/autosurgeon/syndicate/reviver
 	cost = 7
 	surplus = 0
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/implants/stealthimplant
-	name = "Stealth Implant"
-	desc = "This one-of-a-kind implant will make you almost invisible if you play your cards right. \
-			On activation, it will conceal you inside a chameleon cardboard box that is only revealed once someone bumps into it."
+	name = "隠蔽インプラント"
+	desc = "このユニークなインプラントは、あなたが熟練したステルスオペレーターであれば、ほとんど見えなくすることができます。\
+	起動すると、カメレオンのダンボール箱の中に隠れますが、誰かがそれにぶつかると、そのことが明らかになります。"
 	item = /obj/item/storage/box/syndie_kit/imp_stealth
 	cost = 7
 
 /datum/uplink_item/implants/storage
-	name = "Storage Implant"
-	desc = "An implant injected into the body, and later activated at the user's will. It will open a small bluespace \
-			pocket capable of storing two regular-sized items."
+	name = "保管インプラント"
+	desc = "体内に注入されたインプラントは、後にユーザーの意志で作動する。\
+	通常サイズのものを2つ収納できる小さなポケットを開けることができる。"
 	item = /obj/item/storage/box/syndie_kit/imp_storage
 	cost = 7
 
 /datum/uplink_item/implants/thermals
-	name = "Thermal Eyes"
-	desc = "These cybernetic eyes will give you thermal vision. Comes with a free autosurgeon."
+	name = "熱視力の目"
+	desc = "このサイバネティック目で熱視力を得ることができる。オートサージェリーが無料でついてきます。"
 	item = /obj/item/autosurgeon/syndicate/thermal_eyes
 	cost = 7
 	surplus = 0
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/implants/uplink
-	name = "Uplink Implant"
-	desc = "An implant injected into the body, and later activated at the user's will. Has no telecrystals and must be charged by the use of physical telecrystals. \
-			Undetectable (except via surgery), and excellent for escaping confinement."
+	name = "アップリンクインプラント"
+	desc = "体内に注入されたインプラントは、後に使用者の意思で起動する。テレクリスタルを持たず、\
+	物理的なテレクリスタルを使って充電する必要がある。手術以外では発見されず、監禁状態からの脱出に優れている。"
 	item = /obj/item/storage/box/syndie_kit // the actual uplink implant is generated later on in spawn_item
 	cost = UPLINK_IMPLANT_TELECRYSTAL_COST
 	// An empty uplink is kinda useless.
@@ -1874,14 +1818,14 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 /datum/uplink_item/implants/uplink/spawn_item(spawn_path, mob/user, datum/component/uplink/purchaser_uplink)
 	var/obj/item/storage/box/syndie_kit/uplink_box = ..()
-	uplink_box.name = "Uplink Implant Box"
+	uplink_box.name = "アップリンクインプラント"
 	new /obj/item/implanter/uplink(uplink_box, purchaser_uplink.uplink_flag)
 	return uplink_box
 
 
 /datum/uplink_item/implants/xray
-	name = "X-ray Vision Implant"
-	desc = "These cybernetic eyes will give you X-ray vision. Comes with an autosurgeon."
+	name = "X線ビジョンインプラント"
+	desc = "このサイバネティック目は、X線透視が可能です。オートサージェリー付き。"
 	item = /obj/item/autosurgeon/syndicate/xray_eyes
 	cost = 9
 	surplus = 0
@@ -1890,38 +1834,38 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 //Race-specific items
 /datum/uplink_item/race_restricted
-	category = "Species-Restricted"
+	category = "種制限あり"
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 	surplus = 0
 
 /datum/uplink_item/race_restricted/syndilamp
-	name = "Extra-Bright Lantern"
-	desc = "We heard that moths such as yourself really like lamps, so we decided to grant you early access to a prototype \
-	Syndicate brand \"Extra-Bright Lantern™\". Enjoy."
+	name = "超高輝度ランタン"
+	desc = "蛾はランプが好きだということで、シンジケートの超高輝度ランプのプロトタイプをいち早く公開することにしました。お楽しみに。"
 	cost = 2
 	item = /obj/item/flashlight/lantern/syndicate
 	restricted_species = list(SPECIES_MOTH)
 
 /datum/uplink_item/race_restricted/ethereal_grenade
-	name = "Ethereal Dance Grenade"
-	desc = "Syndicate scientists have cunningly stuffed the bodies of multiple Ethereals into a special package! Activating it will cause anyone nearby to dance, excluding Ethereals, who might just get offended."
+	name = "エセリアルパーティ手榴弾"
+	desc = "シンジケートの科学者たちが、複数のエセリアルの死体を巧妙に詰め込んだ特別なパッケージだ！ \
+	起動すると、近くにいる人は誰でも踊ることができる。\
+	これを起動すると、エセリアルを除くすべての人が踊り出しますが、エセリアルは気分を害するかもしれません。"
 	cost = 4
 	item = /obj/item/grenade/discogrenade
 	restricted_species = list(SPECIES_ETHEREAL)
 
 /datum/uplink_item/race_restricted/plasmachameleon
-	name = "Plasmaman Chameleon Kit"
-	desc = "A set of items that contain chameleon technology allowing you to disguise as pretty much anything on the station, and more! \
-			Due to budget cuts, the shoes don't provide protection against slipping. The normal bells and whistles of a plasmaman's jumpsuit and helmet are gutted to make room for the chameleon machinery."
+	name = "プラズマ人変装キット"
+	desc = "変装技術を搭載し、ステーション内のあらゆるものに変装できるアイテムのセットです。予算削減のため、靴には滑り止めがついていない。"
 	item = /obj/item/storage/box/syndie_kit/plasmachameleon
 	cost = 2
 	restricted_species = list(SPECIES_PLASMAMAN)
 
 /datum/uplink_item/race_restricted/tribal_claw
-	name = "Old Tribal Scroll"
-	desc = "We found this scroll in a abandoned lizard settlement of the Knoises clan. \
-			It teaches you how to use your claws and tail to gain an advantage in combat, \
-			don't buy this unless you are a lizard or plan to give it to one as only they can understand the ancient draconic words."
+	name = "古トライバル巻物"
+	desc = "この巻物はクノイエス一族の廃墟となったトカゲの集落で発見されました。戦闘を有利に進めるための爪と尻尾の使い方を教えてくれる。\
+	古代のドラコンを使った言葉を理解できるのはトカゲだけなので、\
+	トカゲでない人やトカゲにあげる予定がない人は買わないでください。"
 	item = /obj/item/book/granter/martial/tribal_claw
 	cost = 14
 	surplus = 0
@@ -1929,205 +1873,205 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 // Role-specific items
 /datum/uplink_item/role_restricted
-	category = "Role-Restricted"
+	category = "役割別制約"
 	purchasable_from = ~(UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 	surplus = 0
 
 /datum/uplink_item/role_restricted/ancient_jumpsuit
-	name = "Ancient Jumpsuit"
-	desc = "A tattered old jumpsuit that will provide absolutely no benefit to you. It fills the wearer with a strange compulsion to blurt out 'glorf'."
+	name = "古代のジャンプスーツ"
+	desc = "何の役にも立たないボロボロの古ぼけたジャンプスーツ。身につけると、いたずら心をくすぐられる。"
 	item = /obj/item/clothing/under/color/grey/glorf
 	cost = 20
 	restricted_roles = list(JOB_NAME_ASSISTANT)
 	surplus = 1
 
 /datum/uplink_item/role_restricted/oldtoolboxclean
-	name = "Ancient Toolbox"
-	desc = "An iconic toolbox design notorious with Assistants everywhere, this design was especially made to become more robust the more telecrystals it has inside it! Tools and insulated gloves included."
+	name = "古代の道具箱"
+	desc = "アシスタントを象徴する道具箱のデザインは、中にテレクリスタルを入れることでより強力になります。工具と保温グローブ付き。"
 	item = /obj/item/storage/toolbox/mechanical/old/clean
 	cost = 2
 	restricted_roles = list(JOB_NAME_ASSISTANT)
 	surplus = 0
 
 /datum/uplink_item/role_restricted/pie_cannon
-	name = "Banana Cream Pie Cannon"
-	desc = "A special pie cannon for a special clown, this gadget can hold up to 20 pies and automatically fabricates one every two seconds!"
+	name = "バナナパイ砲"
+	desc = "最大20個のパイを収納でき、2秒に1個のパイを自動で作る、特別なピエロのための特別なパイキャノンです。"
 	cost = 11
 	item = /obj/item/pneumatic_cannon/pie/selfcharge
 	restricted_roles = list(JOB_NAME_CLOWN)
 	surplus = 0 //No fun unless you're the clown!
 
 /datum/uplink_item/role_restricted/blastcannon
-	name = "Blast Cannon"
-	desc = "A highly specialized weapon, the Blast Cannon is actually relatively simple. It contains an attachment for a tank transfer valve mounted to an angled pipe specially constructed \
-			withstand extreme pressure and temperatures, and has a mechanical trigger for triggering the transfer valve. Essentially, it turns the explosive force of a bomb into a narrow-angle \
-			blast wave \"projectile\". Aspiring scientists may find this highly useful, as forcing the pressure shockwave into a narrow angle seems to be able to bypass whatever quirk of physics \
-			disallows explosive ranges above a certain distance, allowing for the device to use the theoretical yield of a transfer valve bomb, instead of the factual yield."
+	name = "爆風砲"
+	desc = "高度に専門化された武器だが、実は比較的シンプルなものである。\
+	超高圧高温に耐える特殊構造パイプにTTV用アタッチメントを装着し、\
+	トランスファーバルブを作動させるための機械的トリガーを備えている。\
+	つまり、爆弾の爆発力を狭角の爆風波に変えてしまうのです。\
+	科学者を志す者にとっては非常に有用である。圧力衝撃波を狭い角度にすることで、\
+	一定距離以上の爆発範囲を許容しない物理学の奇妙な癖を回避でき、実際の収量ではなく、\
+	移送バルブ爆弾の理論収量を使用することができるようである。"
 	item = /obj/item/gun/blastcannon
 	cost = 14							//High cost because of the potential for extreme damage in the hands of a skilled scientist.
 	restricted_roles = list(JOB_NAME_RESEARCHDIRECTOR, JOB_NAME_SCIENTIST)
 
 /datum/uplink_item/role_restricted/crushmagboots
-	name = "Crushing Magboots"
-	desc = "A pair of extra-strength magboots that crush anyone you walk over."
+	name = "重マグブーツ"
+	desc = "歩くだけで相手を粉砕する、超強力なマグブーツ。"
 	cost = 7
 	item = /obj/item/clothing/shoes/magboots/crushing
 	restricted_roles = list(JOB_NAME_CHIEFENGINEER, JOB_NAME_STATIONENGINEER, JOB_NAME_ATMOSPHERICTECHNICIAN)
 
 /datum/uplink_item/role_restricted/gorillacubes
-	name = "Box of Gorilla Cubes"
-	desc = "A box with three Waffle Co. brand gorilla cubes. Eat big to get big. \
-			Caution: Product may rehydrate when exposed to water."
+	name = "ゴリラキューブ箱"
+	desc = "ワッフル社ブランドのゴリラキューブ3個入りの箱。水につけると大きなゴリラになります。"
 	item = /obj/item/storage/box/gorillacubes
 	cost = 6
 	restricted_roles = list(JOB_NAME_GENETICIST, JOB_NAME_CHIEFMEDICALOFFICER)
 
 /datum/uplink_item/role_restricted/rad_laser
-	name = "Radioactive Microlaser"
-	desc = "A radioactive microlaser disguised as a standard Nanotrasen health analyzer. When used, it emits a \
-			powerful burst of radiation, which, after a short delay, can incapacitate all but the most protected \
-			of humanoids. It has two settings: intensity, which controls the power of the radiation, \
-			and wavelength, which controls the delay before the effect kicks in."
+	name = "放射性マイクロレーザー"
+	desc = "ナノトラセン社製の健康診断機に偽装した放射性マイクロレーザー。\
+	使用すると強力な放射線を放出し、短時間のうちに、\
+	最も保護されたヒューマノイド以外を無力化させることができる。\
+	照射の強さを調節する「インテンシティ」と、効果が発揮されるまでの時間を調節する「ウェーブレングス」の2つの設定があります。"
 	item = /obj/item/healthanalyzer/rad_laser
 	restricted_roles = list(JOB_NAME_MEDICALDOCTOR, JOB_NAME_CHIEFMEDICALOFFICER, JOB_NAME_ROBOTICIST, JOB_NAME_PARAMEDIC, JOB_NAME_BRIGPHYSICIAN)
 	cost = 3
 
 /datum/uplink_item/role_restricted/syndicate_mmi
-	name = "Syndicate MMI"
-	desc = "An MMI which autmatically applies the Syndimov laws to any borg it is placed in. Great for adding known allies to assist you with a little more stealth than a fully emagged borg."
+	name = "シンジケートMMI"
+	desc = "サイボーグに搭載されたシンジケートの法律を自動的に適用するMMI。\
+	ハッキングされたサイボーグよりも少しステルス性が高いので、既知の味方を加えて支援するのに最適なアイテム。"
 	item = /obj/item/mmi/syndie
 	restricted_roles = list(JOB_NAME_ROBOTICIST, JOB_NAME_RESEARCHDIRECTOR)
 	cost = 2
 
 /datum/uplink_item/role_restricted/upgrade_wand
-	name = "Upgrade Wand"
-	desc = "A powerful, single-use wand containing nanomachines that will calibrate the high-tech gadgets commonly employed by magicians to nearly double their potential."
+	name = "アップグレード杖"
+	desc = "ナノマシンを搭載した強力な使い捨て杖で、マジシャンがよく使うハイテク機器を約2倍の性能に校正することができます。"
 	item = /obj/item/upgradewand
 	restricted_roles = list(JOB_NAME_STAGEMAGICIAN)
 	cost = 5
 
 /datum/uplink_item/role_restricted/floorpill_bottle
-	name = "Bottle of Mystery Pills"
-	desc = "We found these lying around Warehouse R1O-GN, which was decommissioned years ago. We were going to throw them out but we heard you might be interested in them."
+	name = "謎の薬のボトル"
+	desc = "数年前に廃止された倉庫R1O-GNに眠っていたものです。捨てようと思っていたのですが、ご興味があるとお聞きしたので。"
 	item = /obj/item/storage/pill_bottle/floorpill/full
 	restricted_roles = list(JOB_NAME_ASSISTANT)
 	cost = 2
 
 /datum/uplink_item/role_restricted/clown_bomb
-	name = "Clown Bomb"
-	desc = "The Clown bomb is a hilarious device capable of massive pranks. It has an adjustable timer, \
-			with a minimum of 60 seconds, and can be bolted to the floor with a wrench to prevent \
-			movement. The bomb is bulky and cannot be moved; upon ordering this item, a smaller beacon will be \
-			transported to you that will teleport the actual bomb to it upon activation. Note that this bomb can \
-			be defused, and some crew may attempt to do so."
+	name = "クラウン爆弾"
+	desc = "クラウン爆弾は、大規模ないたずらができる陽気な装置です。タイマーは60秒から調整可能で、\
+	動かないようにスパナで床に固定することができます。この爆弾を注文すると、小型のビーコンが輸送され、\
+	起動すると実際の爆弾がそこにテレポートされます。なお、この爆弾は解除することが可能で、クルーによっては解除を試みることもある。"
 	item = /obj/item/sbeacondrop/clownbomb
 	cost = 10
 	restricted_roles = list(JOB_NAME_CLOWN)
 
 /datum/uplink_item/role_restricted/clown_grenade
-	name = "C.L.U.W.N.E"
-	desc = "The C.L.U.W.N.E will create one of the honkmother's own completely randomly!\
-			It will only attack if attacked first, and is not loyal to you, so be careful!"
+	name = "C.L.U.W.N.E."
+	desc = "C.L.U.W.N.E.は、完全にランダムでホンクマーザーの仲間を1体作ってくるぞ。\
+	先に攻撃された場合のみ攻撃し、あなたには忠誠心を持たないので注意が必要だ!"
 	item = /obj/item/grenade/spawnergrenade/clown
 	cost = 3
 	restricted_roles = list(JOB_NAME_CLOWN)
 
 
 /datum/uplink_item/role_restricted/clown_grenade_broken
-	name = "Stuffed C.L.U.W.N.E"
-	desc = "The C.L.U.W.N.E will create one of the honkmother's own completely randomly!\
-			It will only attack if attacked first, and is not loyal to you, so be careful!\
-			This one is stuffed to the brim with extra clown action! use with caution!"
+	name = "強力C.L.U.W.N.E."
+	desc = "C.L.U.W.N.E.は、完全にランダムでホンクマーザーの仲間を1体作ってくるぞ。\
+			先に攻撃された場合のみ攻撃し、あなたには忠誠心を持たないので注意が必要だ! \
+			この作品には、クラウンのアクションがふんだんに盛り込まれています！使用には注意が必要です。"
 	item = /obj/item/grenade/spawnergrenade/clown_broken
 	cost = 5
 	restricted_roles = list(JOB_NAME_CLOWN)
 
 
 /datum/uplink_item/role_restricted/spider_injector
-	name = "Australicus Slime Mutator"
-	desc = "Crikey mate, it's been a wild travel from the Australicus sector but we've managed to get \
-			some special spider extract from the giant spiders down there. Use this injector on a gold slime core \
-			to create a few of the same type of spiders we found on the planets over there. They're a bit tame until you \
-			also give them a bit of sentience though."
+	name = "オーストラリアからスライム変異体"
+	desc = "オーストラリクス・セクターからの旅は 大変だったが... \
+	巨大なクモから特別な 抽出液を手に入れることができた。\
+	このインジェクターをゴールド・スライム・コアにセットして向こうの惑星で見つけたのと同じ種類のクモを作るんだ。\
+	このインジェクターを金のスライムコアにつければ、向こうの惑星にいるのと同じ種類のクモを何匹か作ることができる。"
 	item = /obj/item/reagent_containers/syringe/spider_extract
 	cost = 10
 	restricted_roles = list(JOB_NAME_RESEARCHDIRECTOR, JOB_NAME_SCIENTIST, JOB_NAME_ROBOTICIST)
 
 /datum/uplink_item/role_restricted/clowncar
-	name = "Clown Car"
-	desc = "The Clown Car is the ultimate transportation method for any worthy clown! \
-			Simply insert your bikehorn and get in, and get ready to have the funniest ride of your life! \
-			You can ram any spacemen you come across and stuff them into your car, kidnapping them and locking them inside until \
-			someone saves them or they manage to crawl out. Be sure not to ram into any walls or vending machines, as the springloaded seats \
-			are very sensitive. Now with our included lube defense mechanism which will protect you against any angry shitcurity! \
-			Premium features can be unlocked with a cryptographic sequencer!"
+	name = "クラウン車"
+	desc = "クラウン車は、クラウンの究極の移動手段です。バイクホーンを挿して乗り込むだけで、人生で一番楽しいドライブができるぞ。\
+	あなたは、あなたが遭遇したすべての人々を突っ込んで、あなたの車に詰め込み、それらを誘拐し、誰かが彼らを救うか、彼らが何とか這い出てくるまで、\
+	車内に閉じ込めることができます。バネ式のシートは非常に敏感なので、壁や自動販売機に突っ込まないように注意してください。また、\
+	ルーブディフェンス機構が搭載されているので、怒った警備員からあなたを守ります。プレミアム機能が電磁カードで使える!"
 	item = /obj/vehicle/sealed/car/clowncar
 	cost = 20
 	restricted_roles = list(JOB_NAME_CLOWN)
 	purchasable_from = ~UPLINK_INCURSION
 
 /datum/uplink_item/role_restricted/taeclowndo_shoes
-	name = "Tae-clown-do Shoes"
-	desc = "A pair of shoes for the most elite agents of the honkmotherland. They grant the mastery of taeclowndo with some honk-fu moves as long as they're worn."
+	name = "テクラウンドーの靴"
+	desc = "最もエリートな道化師のための一足の靴。クラウンの秘伝の武術を習得することができる。"
 	cost = 12
 	item = /obj/item/clothing/shoes/clown_shoes/taeclowndo
 	restricted_roles = list(JOB_NAME_CLOWN)
 
 /datum/uplink_item/role_restricted/superior_honkrender
-	name = "Superior Honkrender"
-	desc = "An ancient artifact recovered from an ancient cave. Opens the way to the Dark Carnival"
+	name = "全能のホンクレンダ"
+	desc = "古代の洞窟から回収された古代の遺物。ダークカーニバルへの道を開く。"
 	item = /obj/item/veilrender/honkrender
 	cost = 8
 	restricted = TRUE
 	restricted_roles = list(JOB_NAME_CLOWN, JOB_NAME_CHAPLAIN)
 
 /datum/uplink_item/role_restricted/superior_honkrender
-	name = "Superior Honkrender"
-	desc = "An ancient artifact recovered from -. Opens the way to TRANSMISSION OFFLINE\
-			All praise be to the honkmother"
+	name = "大全能のホンクレンダ"
+	desc = "古代の遺物が回収された-。TRANSMISSION OFFLINE"
 	item = /obj/item/veilrender/honkrender/honkhulkrender
 	cost = 20
 	restricted = TRUE
 	restricted_roles = list(JOB_NAME_CLOWN, JOB_NAME_CHAPLAIN)
 
 /datum/uplink_item/role_restricted/concealed_weapon_bay
-	name = "Concealed Weapon Bay"
-	desc = "A modification for non-combat mechas that allows them to equip one piece of equipment designed for combat mechs. \
-			It also hides the equipped weapon from plain sight. \
-			Only one can fit on a mecha."
+	name = "メカの隠れ武器改造"
+	desc = "非戦闘用メカの改造で、戦闘用メカの装備品を1つ装備できるようになる。\
+			装備した武器も見えなくなる。1機につき1つまでしか装着できない。"
 	item = /obj/item/mecha_parts/concealed_weapon_bay
 	cost = 3
 	restricted_roles = list(JOB_NAME_ROBOTICIST, JOB_NAME_RESEARCHDIRECTOR)
 
 /datum/uplink_item/role_restricted/haunted_magic_eightball
-	name = "Haunted Magic Eightball"
-	desc = "Most magic eightballs are toys with dice inside. Although identical in appearance to the harmless toys, this occult device reaches into the spirit world to find its answers. \
-			Be warned, that spirits are often capricious or just little assholes. To use, simply speak your question aloud, then begin shaking."
+	name = "呪術8ボール"
+	desc = "ほとんどのマジックエイトボールは、中にサイコロが入った玩具です。\
+	見た目は無害なおもちゃと同じですが、このオカルト装置は霊界に答えを探しに行くのです。\
+	ただし、霊は気まぐれであったり、無作法であったりするので注意が必要です。\
+	使い方は、質問したいことを声に出して言い、振り始めるだけです。"
 	item = /obj/item/toy/eightball/haunted
 	cost = 2
 	restricted_roles = list(JOB_NAME_CURATOR)
 	limited_stock = 1 //please don't spam deadchat
 
 /datum/uplink_item/role_restricted/voodoo
-	name = "Wicker Doll"
-	desc = "A wicker voodoo doll with a cavity for storing a small item. Once an item has been stored within it, the doll may be used to manipulate the actions of another person that has previously been in contact with the stored item."
+	name = "ブードゥー人形"
+	desc = "空洞に小物を収納することができる魔法のブードゥー人形。\
+	小物を収納すると、収納した小物に接触した他人の行動を操作することができる。"
 	item = /obj/item/voodoo
 	cost = 12
 	restricted_roles = list(JOB_NAME_CURATOR, JOB_NAME_STAGEMAGICIAN)
 
 /datum/uplink_item/role_restricted/prison_cube
-	name = "Prison Cube"
-	desc = "A very strange artifact recovered from a volcanic planet that is useful for keeping people locked away, but not very useful for keeping their disappearance unknown"
+	name = "魔法禁固立方体"
+	desc = "火山惑星から回収された非常に奇妙なアーティファクトは、人々を閉じ込めておくには便利だが、その消息を知られないようにするにはあまり役立たない。"
 	item = /obj/item/prisoncube
 	cost = 6
 	restricted_roles = list(JOB_NAME_CURATOR)
 
 /datum/uplink_item/role_restricted/his_grace
-	name = "His Grace"
-	desc = "An incredibly dangerous weapon recovered from a station overcome by the grey tide. Once activated, He will thirst for blood and must be used to kill to sate that thirst. \
-	His Grace grants gradual regeneration and complete stun immunity to His wielder, but be wary: if He gets too hungry, He will become impossible to drop and eventually kill you if not fed. \
-	However, if left alone for long enough, He will fall back to slumber. \
-	To activate His Grace, simply unlatch Him."
+	name = "ご大王殿下道具箱"
+	desc = "グレイ・タイドに支配されたステーションから回収された、非常に危険な兵器。一度起動すると、殿下は血を渇望し、その渇望を満たすために殺しに使わなければならない。 \
+	ご大王殿下道具箱は、使用者に緩やかな再生と完全なスタン免疫を与えるが、注意が必要で、空腹になりすぎると落とすことができなくなり、最終的には食べさせないと死んでしまう。 \
+	しかし、長い間放っておくと、殿下はまた眠りについてしまいます。 \
+	大王殿下道具箱を起動するには、大王殿下のラッチを外すだけです。"
 	item = /obj/item/his_grace
 	cost = 20
 	restricted_roles = list(JOB_NAME_CHAPLAIN)
@@ -2135,65 +2079,66 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	surplus = 0
 
 /datum/uplink_item/role_restricted/cultconstructkit
-	name = "Cult Construct Kit"
-	desc = "Recovered from an abandoned Nar'sie cult lair two construct shells and a stash of empty soulstones was found. These were purified to prevent occult contamination and have been put in a belt so they may be used as an accessible source of disposable minions. The construct shells have been packaged into two beacons for rapid and portable deployment."
+	name = "カルト使い魔キット"
+	desc = "ナルシエ教団の廃墟から回収されたコンストラクトシェル2個と空のソウルストーンの隠し場所から発見された。\
+	これらはオカルト汚染を防ぐために浄化され、使い捨てのミニオンの供給源として利用できるようベルトに入れられた。\
+	コンストラクトシェルは2つのビーコンに梱包され、迅速かつ持ち運びができるようになった。"
 	item = /obj/item/storage/box/syndie_kit/cultconstructkit
 	cost = 20
 	restricted_roles = list(JOB_NAME_CHAPLAIN)
 
 /datum/uplink_item/role_restricted/spanish_flu
-	name = "Spanish Flu Culture"
-	desc = "A bottle of cursed blood, full of angry spirits which will burn all the heretics with the fires of hell.\
-			At least. thats what the label says"
+	name = "スペイン風邪の瓶"
+	desc = "異端者を地獄の業火で焼き尽くす、怒れる魂が宿る呪われた血の瓶。\
+	少なくとも、ラベルにはそう書かれている。"
 	item = /obj/item/reagent_containers/glass/bottle/fluspanish
 	cost = 14
 	restricted_roles = list(JOB_NAME_CHAPLAIN, JOB_NAME_VIROLOGIST)
 
 /datum/uplink_item/role_restricted/retrovirus
-	name = "Retrovirus Culture Bottle"
-	desc = "A bottle of contagious DNA bugs, which will manually rearrange the DNA of hosts.\
-			At least, that's what the label says."
+	name = "レトロウイルス科の瓶"
+	desc = "伝染性のDNAウイルスが入ったボトルで、宿主のDNAを手動で並べ替える。"
 	item = /obj/item/reagent_containers/glass/bottle/retrovirus
 	cost = 14
 	restricted_roles = list(JOB_NAME_VIROLOGIST, JOB_NAME_GENETICIST)
 
 /datum/uplink_item/role_restricted/random_disease
-	name = "Experimental Disease"
-	desc = "A random disease. Maybe you'll get lucky with another level nine."
+	name = "実験的疾患"
+	desc = "ランダムな病気。もしかしたら、レベル9の症状が出るラッキーなことがあるかもしれません。"
 	item = /obj/item/reagent_containers/glass/bottle/random_virus
 	cost = 5
 	restricted_roles = list(JOB_NAME_VIROLOGIST)
 	surplus = 20
 
 /datum/uplink_item/role_restricted/anxiety
-	name = "Anxiety Culture Bottle"
-	desc = "A bottle of pure contagious autism.\
-			At least, that's what the label says"
+	name = "不安神経症の瓶"
+	desc = "純粋な伝染病の瓶。"
 	item = /obj/item/reagent_containers/glass/bottle/anxiety
 	cost = 4
 	restricted_roles = list(JOB_NAME_VIROLOGIST)
 
 /datum/uplink_item/role_restricted/explosive_hot_potato
-	name = "Exploding Hot Potato"
-	desc = "A potato rigged with explosives. On activation, a special mechanism is activated that prevents it from being dropped. \
-			The only way to get rid of it if you are holding it is to attack someone else with it, causing it to latch to that person instead."
+	name = "爆裂ホットポテト"
+	desc = "爆薬を仕込んだポテト。起動すると特殊な機構が働き、落とせなくなる。\
+	自分が持っている時は他の人を攻撃することで、代わりにその人にくっつくしかない。"
 	item = /obj/item/hot_potato/syndicate
 	cost = 3
 	surplus = 0
 	restricted_roles = list(JOB_NAME_COOK, JOB_NAME_BOTANIST, JOB_NAME_CLOWN, JOB_NAME_MIME)
 
 /datum/uplink_item/role_restricted/echainsaw
-	name = "Energy Chainsaw"
-	desc = "An incredibly deadly modified chainsaw with plasma-based energy blades instead of metal and a slick black-and-red finish. While it rips apart matter with extreme efficiency, it is heavy, large, and monstrously loud."
+	name = "エナジーチェーンソー"
+	desc = "金属の代わりにプラズマを利用したエネルギーブレードを使用し、\
+	黒と赤の光沢のある仕上げが施された、\
+	非常に殺傷力の高い改造チェーンソーです。非常に高い効率で物質を切り裂くが、重く、大きく、音も大きい。"
 	item = /obj/item/chainsaw/energy
 	cost = 10
 	player_minimum = 25
 	restricted_roles = list(JOB_NAME_BOTANIST, JOB_NAME_COOK, JOB_NAME_BARTENDER)
 
 /datum/uplink_item/role_restricted/holocarp
-	name = "Holocarp Parasites"
-	desc = "Fishsticks prepared through ritualistic means in honor of the god Carp-sie, capable of binding a holocarp \
-			to act as a servant and guardian to their host."
+	name = "聖魚寄生虫"
+	desc = "鯉の神に敬意を表して儀式的に作られたフィッシュスティックで、ホログラムの鯉を縛って、宿主の下僕や守護神として働かせることができる。"
 	item = /obj/item/guardiancreator/carp
 	cost = 18
 	surplus = 5
@@ -2203,96 +2148,97 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	restricted_roles = list(JOB_NAME_COOK, JOB_NAME_CHAPLAIN)
 
 /datum/uplink_item/role_restricted/ez_clean_bundle
-	name = "EZ Clean Grenade Bundle"
-	desc = "A box with three cleaner grenades using the trademark Waffle Co. formula. Serves as a cleaner and causes acid damage to anyone standing nearby. \
-			The acid only affects carbon-based creatures."
+	name = "「EZ Clean」 手榴弾バンドル"
+	desc = "ワッフル社のトレードマークである「クリーナーグレネード」が3つ入った箱。クリーナーとして機能し、近くにいる人に酸のダメージを与える。\
+	酸は炭素系の生物にしか効かない"
 	item = /obj/item/storage/box/syndie_kit/ez_clean
 	cost = 6
 	surplus = 20
 	restricted_roles = list(JOB_NAME_JANITOR)
 
 /datum/uplink_item/role_restricted/mimery
-	name = "Guide to Advanced Mimery Series"
-	desc = "The classical two part series on how to further hone your mime skills. Upon studying the series, the user should be able to make 3x1 invisible walls, and shoot bullets out of their fingers. \
-			Obviously only works for Mimes."
+	name = "上級者向けマイムガイド"
+	desc = "パントマイムの技術をさらに磨くための古典的な2部構成です。\
+	このシリーズを学ぶと、3x1の見えない壁を作ったり、指から弾丸を撃ったりできるようになります。もちろんパントマイマーにしか使えないが"
 	cost = 11
 	item = /obj/item/storage/box/syndie_kit/mimery
 	restricted_roles = list(JOB_NAME_MIME)
 	surplus = 0
 
 /datum/uplink_item/role_restricted/mimesabrekit
-	name = "Baguette blade bundle"
-	desc = "A very stealthy blade located inside an even stealthier baguette-shaped sheath."
+	name = "バゲットの刃"
+	desc = "バゲット型のシースには、非常にステルス性の高いブレードが内蔵されています。"
 	cost = 	12
 	item = /obj/item/storage/box/syndie_kit/mimesabrekit
 	restricted_roles = list(JOB_NAME_MIME)
 	surplus = 5
 
 /datum/uplink_item/role_restricted/pressure_mod
-	name = "Kinetic Accelerator Pressure Mod"
-	desc = "A modification kit which allows Kinetic Accelerators to do greatly increased damage while indoors. \
-			Occupies 35% mod capacity."
+	name = "KA圧力モッド"
+	desc = "キネティックアクセラレーターのダメージが室内で大幅に増加する改造キットです。改造能力35%占有"
 	item = /obj/item/borg/upgrade/modkit/indoors
 	cost = 5 //you need two for full damage, so total of 10 for maximum damage
 	limited_stock = 2 //you can't use more than two!
 	restricted_roles = list(JOB_NAME_SHAFTMINER)
 
 /datum/uplink_item/role_restricted/esaw
-	name = "Energy Saw"
-	desc = "A deadly energy saw. Comes in a slick black finish."
+	name = "エネルギー鋸"
+	desc = "必殺のエネルギーソー。光沢のある黒仕上げ。"
 	cost = 5
 	item = /obj/item/melee/transforming/energy/sword/esaw
 	restricted_roles = list("Medical Doctor", "Chief Medical Officer", "Paramedic", "Brig Physician")
 
 /datum/uplink_item/role_restricted/esaw_arm
-	name = "Energy Saw Arm Implant"
-	desc = "An implant that grants you a deadly energy saw inside your arm. Comes with a syndicate autosurgeon for immediate self-application."
+	name = "エネルギー鋸腕インプラント"
+	desc = "腕の中に必殺のエネルギーソーを付与するインプラント。シンジケートのオートサージェリーが付属しており、すぐに自分で装着することができる。"
 	cost = 8
 	item = /obj/item/autosurgeon/syndicate/esaw_arm
 	restricted_roles = list(JOB_NAME_MEDICALDOCTOR, JOB_NAME_CHIEFMEDICALOFFICER, JOB_NAME_PARAMEDIC, JOB_NAME_BRIGPHYSICIAN)
 
 /datum/uplink_item/role_restricted/magillitis_serum
-	name = "Magillitis Serum Autoinjector"
-	desc = "A single-use autoinjector which contains an experimental serum that causes rapid muscular growth in Hominidae. \
-			Side-affects may include hypertrichosis, violent outbursts, and an unending affinity for bananas."
+	name = "ゴリラの力注入器"
+	desc = "人間の筋肉を急速に成長させる実験的な血清が入った、使い切りの自動注射器です。副作用として、多毛、暴発、バナナへの執着が続くことがある。"
 	item = /obj/item/reagent_containers/hypospray/medipen/magillitis
 	cost = 15
 	restricted_roles = list(JOB_NAME_GENETICIST, JOB_NAME_CHIEFMEDICALOFFICER)
 
 /datum/uplink_item/role_restricted/modified_syringe_gun
-	name = "Modified Syringe Gun"
-	desc = "A syringe gun that fires DNA injectors instead of normal syringes."
+	name = "変形シリンジガン"
+	desc = "通常の注射器の代わりにDNAインジェクターを発射する注射器ガン。"
 	item = /obj/item/gun/syringe/dna
 	cost = 14
 	restricted_roles = list(JOB_NAME_GENETICIST, JOB_NAME_CHIEFMEDICALOFFICER)
 
 /datum/uplink_item/role_restricted/chemical_gun
-	name = "Reagent Dartgun"
-	desc = "A heavily modified syringe gun which is capable of synthesizing its own chemical darts using input reagents. Can hold 100u of reagents."
+	name = "試薬ダートガン"
+	desc = "入力された試薬を使って、自らケミカルダーツを合成することができるシリンジガンを大幅に改造したもの。100uの試薬が収納可能。"
 	item = /obj/item/gun/chem
 	cost = 12
 	restricted_roles = list(JOB_NAME_CHEMIST, JOB_NAME_CHIEFMEDICALOFFICER)
 
 /datum/uplink_item/role_restricted/reverse_bear_trap
-	name = "Reverse Bear Trap"
-	desc = "An ingenious execution device worn on (or forced onto) the head. Arming it starts a 1-minute kitchen timer mounted on the bear trap. When it goes off, the trap's jaws will \
-	violently open, instantly killing anyone wearing it by tearing their jaws in half. To arm, attack someone with it while they're not wearing headgear, and you will force it onto their \
-	head after three seconds uninterrupted."
+	name = "リバースベアトラップ"
+	desc = "頭部に装着する（または強制的に装着させる）独創的な処刑装置。\
+	ベアトラップに取り付けられた1分間のキッチンタイマーが作動する。タイマーが切れると、罠の顎が激しく開き、\
+	装着している人の顎を真っ二つにして瞬時に殺す。武装させるには、\
+	相手がヘッドギアを装着していない状態で攻撃し、3秒以上中断した後、強制的に頭に装着させる。"
 	cost = 4
 	item = /obj/item/reverse_bear_trap
 	restricted_roles = list(JOB_NAME_CLOWN)
 
 /datum/uplink_item/role_restricted/reverse_revolver
-	name = "Reverse Revolver"
-	desc = "A revolver that always fires at its user. \"Accidentally\" drop your weapon, then watch as the greedy corporate pigs blow their own brains all over the wall. \
-	The revolver itself is actually real. Only clumsy people, and clowns, can fire it normally. Comes in a box of hugs. Honk."
+	name = "リバース回転式拳銃"
+	desc = "常に使用者に向けて発射される回転式拳銃。\
+	誤って銃を落としてしまうと、貪欲な企業豚が自分の脳みそを壁一面に吹き飛ばすのを見ることができる。\
+	回転式拳銃は実在するんだ 不器用な人とピエロ以外は普通に撃てるよ。"
 	cost = 13
 	item = /obj/item/storage/box/hug/reverse_revolver
 	restricted_roles = list(JOB_NAME_CLOWN)
 
 /datum/uplink_item/role_restricted/laser_arm
-	name = "Laser Arm Implant"
-	desc = "An implant that grants you a recharging laser gun inside your arm. Weak to EMPs. Comes with a syndicate autosurgeon for immediate self-application."
+	name = "レーザー腕インプラント"
+	desc = "腕の中に充電式のレーザーガンを付与するインプラント。\
+	EMPに弱い。シンジケートのオートサージェリーが付属しており、すぐに自分で装着することができる。"
 	cost = 12
 	item = /obj/item/autosurgeon/syndicate/laser_arm
 	restricted_roles = list(JOB_NAME_ROBOTICIST, JOB_NAME_RESEARCHDIRECTOR)
@@ -2300,7 +2246,7 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 // Pointless
 /datum/uplink_item/badass
-	category = "(Pointless) Badassery"
+	category = "(詰まらない)壮言大語"
 	surplus = 0
 
 
@@ -2311,28 +2257,27 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	purchasable_from = (UPLINK_NUKE_OPS | UPLINK_CLOWN_OPS)
 
 /datum/uplink_item/badass/costumes/obvious_chameleon
-	name = "Broken Chameleon Kit"
-	desc = "A set of items that contain chameleon technology allowing you to disguise as pretty much anything on the station, and more! \
-			Please note that this kit did NOT pass quality control."
+	name = "壊れた変装キット"
+	desc = "変装技術を搭載し、ステーション内のあらゆるものに変装できるアイテムのセットです。\
+	このキットは品質管理に合格していませんのでご注意ください。"
 	item = /obj/item/storage/box/syndie_kit/chameleon/broken
 	cost = 2
 	purchasable_from = ALL
 
 /datum/uplink_item/badass/costumes/centcom_official
-	name = "CentCom Official Costume"
-	desc = "Ask the crew to \"inspect\" their nuclear disk and weapons system, and then when they decline, pull out a fully automatic rifle and gun down the Captain. \
-			Radio headset does not include encryption key. No gun included."
+	name = "セントコム公式コスチューム"
+	desc = "核ディスクと兵器システムを点検するようクルーに要求し、断られたらフルオートライフルを取り出し、\
+	船長を銃殺する。無線機のヘッドセットには暗号キーは含まれません。銃は付属していません。"
 	item = /obj/item/storage/box/syndie_kit/centcom_costume
 
 /datum/uplink_item/badass/costumes/clown
-	name = "Clown Costume"
-	desc = "Nothing is more terrifying than clowns with fully automatic weaponry."
+	name = "クラウンのコスチューム"
+	desc = "完全自動小銃を持ったピエロほど怖いものはない。"
 	item = /obj/item/storage/backpack/duffelbag/clown/syndie
 
 /datum/uplink_item/badass/balloon
-	name = "Syndicate Balloon"
-	desc = "For showing that you are THE BOSS: A useless red balloon with the Syndicate logo on it. \
-			Can blow the deepest of covers."
+	name = "シンジケートバルーン"
+	desc = "あなたが「THE BOSS」であることを示すために。シンジケートのロゴが入った、役に立たない赤い風船。"
 	item = /obj/item/toy/syndicateballoon
 	cost = 20
 	cant_discount = TRUE
@@ -2340,63 +2285,59 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	surplus = 0
 
 /datum/uplink_item/badass/syndiebeer
-	name = "Syndicate Beer"
-	desc = "Syndicate brand 'beer' designed to flush toxins out of your system. \
-			Warning: Do not consume more than one!"
+	name = "シンジケートビール"
+	desc = "毒素を排出するために作られたシンジケートブランドの「ビール」。警告 1本以上飲んではいけません"
 	item = /obj/item/reagent_containers/food/drinks/syndicatebeer
 	cost = 4
 	illegal_tech = FALSE
 
 /datum/uplink_item/badass/syndiecash
-	name = "Syndicate Briefcase Full of Cash"
-	desc = "A secure briefcase containing 5000 space credits. Useful for bribing personnel, or purchasing goods \
-			and services at lucrative prices. The briefcase also feels a little heavier to hold; it has been \
-			manufactured to pack a little bit more of a punch if your client needs some convincing."
+	name = "懐紙筒"
+	desc = "5000スペースクレジットの入った安全な書類鞄。職員への賄賂や、有利な価格での商品・サービスの購入に役立つ。\
+	また、この書類鞄を持つと少し重く感じる。クライアントに説得力を与えるために、もう少しパンチを効かせるように製造されている。"
 	item = /obj/item/storage/secure/briefcase/syndie
 	cost = 1
 	restricted = TRUE
 	illegal_tech = FALSE
 
 /datum/uplink_item/badass/syndiecards
-	name = "Syndicate Playing Cards"
-	desc = "A special deck of space-grade playing cards with a mono-molecular edge and metal reinforcement, \
-			making them slightly more robust than a normal deck of cards. \
-			You can also play card games with them or leave them on your victims."
+	name = "シンジケートトランプ"
+	desc = "単分子エッジと金属補強により、通常のトランプより若干頑丈に作られた宇宙仕様の特殊トランプ。\
+	これでカードゲームをしたり、テレホンカードを残したりすることもできます。"
 	item = /obj/item/toy/cards/deck/syndicate
 	cost = 1
 	surplus = 40
 	illegal_tech = FALSE
 
 /datum/uplink_item/badass/syndiecigs
-	name = "Syndicate Smokes"
-	desc = "Strong flavor, dense smoke, infused with omnizine."
+	name = "シンジケート紙巻タバコ"
+	desc = "強い味わい、濃厚な煙、オムニジンが溶け込んでいる。"
 	item = /obj/item/storage/fancy/cigarettes/cigpack_syndicate
 	cost = 2
 	illegal_tech = FALSE
 
 /datum/uplink_item/badass/toy_box
-	name = "Box of DonkCo. Toys"
-	desc = "A special package box for children who want to have awesome gifts from their parents, full of DonkCo. toys. \
-	Toys inside of the box are totally safe and not harmful, approved by Nanotrasen safety assurance even, that can be said as non-contraband stuff literally. \
-	This package will be special when you're going to present funny toys to your beloved child. Don't ask why the box is red."
+	name = "株式会社ドンクの箱おもちゃ"
+	desc = "ドンコのおもちゃが詰まった、親からすごいプレゼントが欲しい子のためのスペシャルパッケージボックスです。\
+	箱の中のおもちゃは、ナノトラセンの安全保証によって承認された、完全に安全で有害ではないものです。箱が赤い理由は聞かないでね。"
 	item = /obj/item/storage/box/syndie_kit/toy_box
 	cost = 2
 	surplus = 0
 
 /datum/uplink_item/implants/deathrattle
-	name = "Box of Deathrattle Implants"
-	desc = "A collection of implants (and one reusable implanter) that should be injected into the team. When one of the team \
-	dies, all other implant holders recieve a mental message informing them of their teammates' name \
-	and the location of their death. Unlike most implants, these are designed to be implanted \
-	in any creature, biological or mechanical."
+	name = "遺告のインプラント"
+	desc = "チームに注入すべきインプラントのコレクション(と再利用可能なインプランター1個)。\
+	チームの誰かが死ぬと、他のインプラント保有者全員に、チームメイトの名前と死んだ場所を知らせるメンタルメッセージが送られる。\
+	一般的なインプラントとは異なり、生物・機械問わず、あらゆる生物に移植できるよう設計されている。"
 	item = /obj/item/storage/box/syndie_kit/imp_deathrattle
 	cost = 4
 	surplus = 0
 	purchasable_from = UPLINK_NUKE_OPS
 
 /datum/uplink_item/device_tools/antag_lasso
-	name = "Mindslave Lasso"
-	desc = "A state of the art taming device.\n Use this device to tame almost any animal by lassoing and untying them.\n Tamed animals can be rode & commanded!"
+	name = "マインドスレイブ投げ縄"
+	desc = "最新鋭のテイム装置。　この装置を使って、ほとんどの動物を縄で縛ったり解いたりすることで手なずけることができます。\
+	手なずけられた動物には、騎乗して命令することができます。"
 	item = /obj/item/mob_lasso/antag
 	cost = 3
 	surplus = 0
